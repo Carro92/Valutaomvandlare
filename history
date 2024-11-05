@@ -1,0 +1,11 @@
+## Börja med att skriva
+- git init
+
+hämta din url från ditt github repo https://github.com/Carro92/Valutaomvandlare.git
+- git remote add origin https://github.com/Carro92/Valutaomvandlare.git
+
+- git add .
+- git commit -m "first commit"
+- git push
+
+## Skapa en index.html fil
