@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "your_build_command_here"   
+    "build": "echo 'No build step required'" 
   },
   "keywords": [],
   "author": "",
