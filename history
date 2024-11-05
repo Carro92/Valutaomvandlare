@@ -3,9 +3,43 @@
 
 hämta din url från ditt github repo https://github.com/Carro92/Valutaomvandlare.git
 - git remote add origin https://github.com/Carro92/Valutaomvandlare.git
-
 - git add .
-- git commit -m "first commit"
-- git push
 
-## Skapa en index.html fil
+
+## Skapa en mapp som du döper till "Valutaomvandlare" lägg två filer 
+En fil som heter "index.html" Förr att lägga till html kod och skriv in
+"
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valutaomvandlare</title>
+    <link rel="stylesheet" href="styles.css"> <!-- Om du skapar en CSS-fil -->
+</head>
+<body>
+    <h1>Välkommen till Valutaomvandlaren!</h1>
+    <p>Denna app kommer att hjälpa dig att omvandla valutor med aktuella växelkurser.</p>
+    <!-- Du kan lägga till mer innehåll här senare -->
+</body>
+</html>
+
+"
+
+- Därefter skapar du en till fil som heter "styles.css" för att styla lite och skriv in
+"
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    color: #333;
+}
+
+"
+## För att testa pusha upp till github och då laddas koden upp till azure static web app.
+
+## 
