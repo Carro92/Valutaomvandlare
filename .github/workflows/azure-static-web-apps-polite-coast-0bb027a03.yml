@@ -38,9 +38,9 @@ jobs:
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_POLITE_COAST_0BB027A03 }}
           action: "upload"
-          app_location: "/Valutaomvandlare" # Justerat till stort V
-          api_location: "" # Lämna tom om du inte har någon API
-          output_location: "" # Lämna tom om ingen byggoutput krävs
+          app_location: "/Valutaomvandlare" # Appens källa
+          api_location: "" # Ingen API angiven
+          output_location: "." # Anger nu att artefakterna finns i den aktuella mappen
           github_id_token: ${{ steps.idtoken.outputs.result }}
 
   close_pull_request_job:
