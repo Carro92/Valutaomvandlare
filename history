@@ -40,6 +40,35 @@ h1 {
 }
 
 "
+
+## Skapa en package.json fil
+skriv i terminalen
+- npm init -y
+-öppna sedan den filen och skriv in
+"
+{
+  "name": "valutaomvandlare",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "echo 'Building...'",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "axios": "^1.7.7"
+  }
+}
+
+
+"
+
+## Skriv i terminalen 
+- npm install axios // För att installera axios. 
+
 ## För att testa pusha upp till github och då laddas koden upp till azure static web app.
 
 ## 
