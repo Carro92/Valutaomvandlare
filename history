@@ -69,6 +69,8 @@ skriv i terminalen
 ## Skriv i terminalen 
 - npm install axios // För att installera axios. 
 
+- Git push
+
 ## För att testa pusha upp till github och då laddas koden upp till azure static web app.
 
 ## 
