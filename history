@@ -72,6 +72,5 @@ skriv i terminalen
 - Git push
 
 
-## För att testa pusha upp till github och då laddas koden upp till azure static web app.
-
-## 
+## För att se om det lyckas
+- Gå in på github -> action och se om det blir godkänt
