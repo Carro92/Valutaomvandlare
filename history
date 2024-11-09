@@ -1,3 +1,7 @@
+## Skapa Azure Static Web App inne på Azure
+- FYLL I ALL INFO SEDAN!!!!
+
+
 ## Börja med att skriva
 - git init
 
@@ -23,6 +27,7 @@ En fil som heter "index.html" Förr att lägga till html kod och skriv in
     <!-- Du kan lägga till mer innehåll här senare -->
 </body>
 </html>
+
 
 "
 
@@ -51,18 +56,14 @@ skriv i terminalen
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build": "echo 'Building...'",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "echo 'No build step required'" 
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "axios": "^1.7.7"
-  }
+  "description": ""
 }
-
 
 "
 
@@ -74,3 +75,261 @@ skriv i terminalen
 
 ## För att se om det lyckas
 - Gå in på github -> action och se om det blir godkänt
+Är det godkänt
+
+## Gå in på azure och din app som skapades tidigare "Valutaomvandlare" 
+- Där det står URL kopiera din länken och klista in den i en brownser funkar det så kommer det upp en app där det står "välkommen till valutaomvandlaren"
+
+## Färdig med frontend-delen
+om du nu kan se din app med meddelandet "Välkommen till Valutaomvandlaren" och den är hostad på Azure Static Web Apps, så har du lyckats skapa och implementera frontend-delen av din valutaomvandlare! Det innebär att du har genomfört stegen för att:
+
+-Skapa en statisk webbapp på Azure.
+-Deploya frontend-koden till Azure.
+-Verifiera att webbappen fungerar som förväntat.
+
+## skapa en tabell i Azure table storage inne på azure
+- Klicka på Create a resource i övre vänstra hörnet.
+- Sök efter Storage account och välj det.
+- Klicka på Create.
+- Subscription: Välj din prenumeration.
+- Resource group: Tips använd samma som du hade till appen
+Storage account name: Ange ett unikt namn för ditt lagringskonto. (valutaomvandlarestorage )
+Region: west europe
+Performance: Standard 
+Replication: Välj en replikeringsmetod (t.ex. Locally redundant storage (LRS)).
+-Klicka på Review + create och sedan på Create.
+
+## Aktivera azyre table storage
+- Gå till det lagringskonto du just har skapat.
+- I vänstermenyn, klicka på Tables under Table service.
+- Klicka på + Table för att skapa en ny tabell.
+- Ange ett namn för tabellen, (CurrencyData) och klicka på OK.
+
+Gå in på din storage som du skapat på azure
+- i vänstra spalten finns "storage browser" tryck på den
+- Välj "tables"
+- Tryck på din "table" 
+- Uppe i vänstra hörnet så står det nu "+ Add entity"
+jag har fyllt i
+Partitionkey, string, usd
+rowkey, string, år-mån-da
+exchangerate, double, 9.5
+source, string (Skriv källan för valutakursen) (t.ex. Open Exchange Rates).
+
+## Skapa en Azure Function för att hämta växelkurser
+##  // kommer att göra en enkel HTTP-triggerad funktion som anropar en extern API för att hämta växelkurser och sedan sparar resultatet i din Azure Table Storage.
+- Inne på VS Code tryck (ctrl+shift+p)
+- skriv in " Azure Functions: Create New Project" och välj detta alternativ.
+- Följ sedan stegen i guiden för att skapa en ny funktion: välj en mapp för projektet, välj C#, välj .NET 6 (LTS), välj HTTP Trigger, namnge funktionen (GetExchangeRates), och välj Anonymous.  // (eftersom du är i utvecklingsstadiet och vill testa utan att hantera åtkomstbegränsningar väljer man Anonymous).
+
+## Nu har det skapats en fil som heter "GetExchangeRates.cs" 
+Skapa nu en mapp som heter "Functions" och flytta filen som heter "GetExchangeRates.cs"
+
+- Gå in i "GetExchangesRAtes.cs" och ta bort det som står och lägg till 
+"
+using System;
+using System.Net.Http;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
+using Microsoft.Extensions.Logging;
+
+public static class GetExchangeRates
+{
+    private static readonly HttpClient httpClient = new HttpClient();
+
+    [FunctionName("GetExchangeRates")]
+    public static async Task<IActionResult> Run(
+        [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
+        ILogger log)
+    {
+        log.LogInformation("Fetching exchange rates...");
+
+        string apiUrl = "https://api.exchangerate-api.com/v4/latest/USD"; // Exempel-URL för ett valutakurs-API
+        HttpResponseMessage response = await httpClient.GetAsync(apiUrl);
+
+        if (response.IsSuccessStatusCode)
+        {
+            string responseBody = await response.Content.ReadAsStringAsync();
+            var exchangeData = JsonConvert.DeserializeObject(responseBody);
+
+            // Här anropar vi en funktion som sparar data i Table Storage
+            await SaveExchangeRatesToTableStorage(exchangeData, log);
+
+            return new OkObjectResult(exchangeData);
+        }
+        else
+        {
+            log.LogError("Failed to fetch exchange rates.");
+            return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    private static async Task SaveExchangeRatesToTableStorage(dynamic exchangeData, ILogger log)
+    {
+        // Implementera logik för att spara exchangeData till Azure Table Storage
+        // Här kommer vi att spara växelkurserna i Table Storage
+    }
+}
+"
+
+## För att spara växelkurser i table storage
+- Måste man skapa SaveExchangeRatesToTableStorage i din GetExchangeRates.cs-fil
+Koden som ska läggas till ser ut så här 
+"private static async Task SaveExchangeRatesToTableStorage(dynamic exchangeData, ILogger log)
+{
+    // Hämta anslutningssträngen från miljövariabler
+    string storageConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
+    
+    // Skapa en anslutning till Table Storage
+    CloudStorageAccount storageAccount = CloudStorageAccount.Parse(storageConnectionString);
+    CloudTableClient tableClient = storageAccount.CreateCloudTableClient(new TableClientConfiguration());
+    
+    // Hämta referens till tabellen "CurrencyRates" eller skapa den om den inte finns
+    CloudTable table = tableClient.GetTableReference("CurrencyRates");
+    await table.CreateIfNotExistsAsync();
+
+    // Loopa igenom varje valuta och spara den i tabellen
+    foreach (var rate in exchangeData.rates)
+    {
+        // Skapa ett nytt CurrencyEntity-objekt som representerar raden i Table Storage
+        var currencyEntity = new CurrencyEntity("ExchangeRate", rate.Key)
+        {
+            Rate = rate.Value
+        };
+
+        // Infoga eller uppdatera posten i Table Storage
+        TableOperation insertOrMergeOperation = TableOperation.InsertOrMerge(currencyEntity);
+        await table.ExecuteAsync(insertOrMergeOperation);
+    }
+
+    log.LogInformation("Exchange rates saved to Table Storage.");
+}
+
+// Klass som representerar en entitet i Table Storage
+public class CurrencyEntity : TableEntity
+{
+    // Konstruktor som definierar PartitionKey och RowKey
+    public CurrencyEntity(string partitionKey, string rowKey)
+    {
+        PartitionKey = partitionKey;
+        RowKey = rowKey;
+    }
+
+    public CurrencyEntity() { }
+
+    // Egenskap för växelkursen
+    public double Rate { get; set; }
+}
+"
+- Så hela den nya koden i "getexchangerates.cs" ser nu ut så här 
+"using System;
+using System.IO;
+using System.Net.Http;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
+using Microsoft.Extensions.Logging;
+using Microsoft.Azure.Cosmos.Table; // För Table Storage
+
+public static class GetExchangeRates
+{
+    // Skapa en HttpClient-instans för att göra API-anrop
+    private static readonly HttpClient httpClient = new HttpClient();
+
+    // Funktion som hämtar växelkurser
+    [FunctionName("GetExchangeRates")]
+    public static async Task<IActionResult> Run(
+        [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
+        ILogger log)
+    {
+        log.LogInformation("Fetching exchange rates...");
+
+        string apiUrl = "https://api.exchangerate-api.com/v4/latest/USD"; // Exempel-URL för ett valutakurs-API
+        HttpResponseMessage response = await httpClient.GetAsync(apiUrl);
+
+        if (response.IsSuccessStatusCode)
+        {
+            // Läs svaret som en sträng
+            string responseBody = await response.Content.ReadAsStringAsync();
+
+            // Deserialisera JSON-svaret till ett dynamiskt objekt
+            var exchangeData = JsonConvert.DeserializeObject(responseBody);
+
+            // Spara växelkurser till Azure Table Storage
+            await SaveExchangeRatesToTableStorage(exchangeData, log);
+
+            // Returnera växelkurserna som svar på API-anropet
+            return new OkObjectResult(exchangeData);
+        }
+        else
+        {
+            log.LogError("Failed to fetch exchange rates.");
+            return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    // Metod för att spara växelkurser i Table Storage
+    private static async Task SaveExchangeRatesToTableStorage(dynamic exchangeData, ILogger log)
+    {
+        // Hämta anslutningssträngen från miljövariabler
+        string storageConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
+        
+        // Skapa en anslutning till Table Storage
+        CloudStorageAccount storageAccount = CloudStorageAccount.Parse(storageConnectionString);
+        CloudTableClient tableClient = storageAccount.CreateCloudTableClient(new TableClientConfiguration());
+        
+        // Hämta referens till tabellen "CurrencyRates" eller skapa den om den inte finns
+        CloudTable table = tableClient.GetTableReference("CurrencyRates");
+        await table.CreateIfNotExistsAsync();
+
+        // Loopa igenom varje valuta och spara den i tabellen
+        foreach (var rate in exchangeData.rates)
+        {
+            // Skapa ett nytt CurrencyEntity-objekt som representerar raden i Table Storage
+            var currencyEntity = new CurrencyEntity("ExchangeRate", rate.Key)
+            {
+                Rate = rate.Value
+            };
+
+            // Infoga eller uppdatera posten i Table Storage
+            TableOperation insertOrMergeOperation = TableOperation.InsertOrMerge(currencyEntity);
+            await table.ExecuteAsync(insertOrMergeOperation);
+        }
+
+        log.LogInformation("Exchange rates saved to Table Storage.");
+    }
+
+    // Klass som representerar en entitet i Table Storage
+    public class CurrencyEntity : TableEntity
+    {
+        // Konstruktor som definierar PartitionKey och RowKey
+        public CurrencyEntity(string partitionKey, string rowKey)
+        {
+            PartitionKey = partitionKey;
+            RowKey = rowKey;
+        }
+
+        public CurrencyEntity() { }
+
+        // Egenskap för växelkursen
+        public double Rate { get; set; }
+    }
+}
+"
+## Dock måste du ändra lite saker i texten
+- bla. anslutningssträng den hittar du genom att:
+- Gå till Azure Portal.
+- Sök efter och välj din Storage Account.
+- Under Settings, välj Access keys.
+- Här hittar du din Connection string för key1 eller key2.
+- Kopiera en av dessa anslutningssträngar. (DefaultEndpointsProtocol=https;AccountName=valutaomvandlarestorage;AccountKey=oc7XZpFbS0asVDtxWg30C6MwPvL2Nao1k87oWZOd0E4JTMYwUR8zoGLN7xrqDXpX7Ib2snfBybyH+ASt2F+nvQ==;EndpointSuffix=core.windows.net)
+- Gå in i filen "local.settings.json" och lägg in det där det står "AzureWebJobsStorage" 
+
+## Ge behörighet till table storage
