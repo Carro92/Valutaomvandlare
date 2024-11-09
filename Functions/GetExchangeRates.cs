@@ -8,7 +8,9 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Logging;
-using Microsoft.Azure.Cosmos.Table; // För Table Storage
+using Microsoft.Azure.Cosmos.Table;
+using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Table; // För Table Storage
 
 public static class GetExchangeRates
 {
@@ -55,7 +57,7 @@ public static class GetExchangeRates
         
         // Skapa en anslutning till Table Storage
         CloudStorageAccount storageAccount = CloudStorageAccount.Parse(storageConnectionString);
-        CloudTableClient tableClient = storageAccount.CreateCloudTableClient(new TableClientConfiguration());
+        CloudTableClient tableClient = storageAccount.CreateCloudTableClient();
         
         // Hämta referens till tabellen "CurrencyRates" eller skapa den om den inte finns
         CloudTable table = tableClient.GetTableReference("CurrencyRates");
@@ -92,5 +94,12 @@ public static class GetExchangeRates
 
         // Egenskap för växelkursen
         public double Rate { get; set; }
+    }
+}
+
+internal class TableClientConfiguration
+{
+    public TableClientConfiguration()
+    {
     }
 }
