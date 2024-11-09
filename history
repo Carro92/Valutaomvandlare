@@ -329,7 +329,7 @@ public static class GetExchangeRates
 - Sök efter och välj din Storage Account.
 - Under Settings, välj Access keys.
 - Här hittar du din Connection string för key1 eller key2.
-- Kopiera en av dessa anslutningssträngar. (DefaultEndpointsProtocol=https;AccountName=valutaomvandlarestorage;AccountKey=oc7XZpFbS0asVDtxWg30C6MwPvL2Nao1k87oWZOd0E4JTMYwUR8zoGLN7xrqDXpX7Ib2snfBybyH+ASt2F+nvQ==;EndpointSuffix=core.windows.net)
+- Kopiera en av dessa anslutningssträngar.
 - Gå in i filen "local.settings.json" och lägg in det där det står "AzureWebJobsStorage" 
 
 ## Ge behörighet till table storage
