@@ -56,11 +56,11 @@ public static class GetExchangeRates
         string storageConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
         
         // Skapa en anslutning till Table Storage
-        CloudStorageAccount storageAccount = CloudStorageAccount.Parse(storageConnectionString);
-        CloudTableClient tableClient = storageAccount.CreateCloudTableClient();
+        Microsoft.WindowsAzure.Storage.CloudStorageAccount storageAccount = Microsoft.WindowsAzure.Storage.CloudStorageAccount.Parse(storageConnectionString);
+        Microsoft.WindowsAzure.Storage.Table.CloudTableClient tableClient = storageAccount.CreateCloudTableClient();
         
         // Hämta referens till tabellen "CurrencyRates" eller skapa den om den inte finns
-        CloudTable table = tableClient.GetTableReference("CurrencyRates");
+        Microsoft.WindowsAzure.Storage.Table.CloudTable table = tableClient.GetTableReference("CurrencyRates");
         await table.CreateIfNotExistsAsync();
 
         // Loopa igenom varje valuta och spara den i tabellen
@@ -73,7 +73,7 @@ public static class GetExchangeRates
             };
 
             // Infoga eller uppdatera posten i Table Storage
-            TableOperation insertOrMergeOperation = TableOperation.InsertOrMerge(currencyEntity);
+            Microsoft.WindowsAzure.Storage.Table.TableOperation insertOrMergeOperation = Microsoft.WindowsAzure.Storage.Table.TableOperation.InsertOrMerge(currencyEntity);
             await table.ExecuteAsync(insertOrMergeOperation);
         }
 
@@ -81,7 +81,7 @@ public static class GetExchangeRates
     }
 
     // Klass som representerar en entitet i Table Storage
-    public class CurrencyEntity : TableEntity
+    public class CurrencyEntity : Microsoft.WindowsAzure.Storage.Table.TableEntity
     {
         // Konstruktor som definierar PartitionKey och RowKey
         public CurrencyEntity(string partitionKey, string rowKey)
