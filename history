@@ -215,4 +215,42 @@ ________________________________________________________________________________
 # Nästa steg är att få funktionen upp till Azure portalen + att då kan man spara i table storage också
 
 ## Gå in på VS Code
--
+- Gå först till ".vscode" - "settings.json" och lägg till 
+"
+{
+  "azureFunctions.deploySubpath": "src/functionapp"
+}
+" längst ner i den befintliga koden
+
+## Gå nu in på Azure portalen 
+Skapa en Function App:
+-Tryck på Function App -> tryck sedan på "create function app"
+För att skapa en ny Function App:
+Subscription: Välj den prenumeration du vill använda. (Consumption)
+Resource Group: Välj din befintliga valutaomvandlare-resource group. (Har du ingen så kan du skapa en)
+Region: Välj West Europe (eller den region där du vill att den ska ligga).
+Name: Ge din Function App ett namn, exempelvis Valutaomvandlare-FunctionApp.
+Runtime stack: Välj .NET (eftersom du använder C#).
+Version: Välj 8(LTS) in-process model (eller den version du vill använda).
+Region: Välj West Europe.
+Gå till nästa sida "Storage" och välj den du skapat tidigare (om du har skapat en sedan tidigare vilket jag har gjort)
+Klicka på Review + create och skapa den.
+
+## Gå nu tillbaka till VS Code 
+- Gå till mappen som "FetchExchangeRates.cs" ligger i. Alltså "src"- "functionapp" högerklicka på "functionapp" och välj "Deploy to function app" -> Välj den funktion som du nyss skapade
+
+// På detta sätt så fylls koden in i funktion appen
+
+## För att kontrollera att det har blivit rätt
+- Gå in på VS Code
+- Gå till Azure funktionen
+- Ser du "Function app" - och din nyskapade funktion app så har det lyckats
+- Du kan också högerklicka på din funktion app och välja "start streaming log" står det då någonting liknande "welcome, you are now connecte to log" så funkar det som det ska
+
+
+## Testa att köra funtionen ifrån Azure portalen
+- Inne i din skapade function app gå till "function" och välj "FetchExchangeRates" där väljer du "test/run" och välj "run" om det lyckades så ser du olika valutor.
+
+- Testa med URL genom att gå till knappen "get function URL" bredvid "test/run" knappen och kopiera "default (Function key)"in den koden i en webbläsare. 
+
+    
