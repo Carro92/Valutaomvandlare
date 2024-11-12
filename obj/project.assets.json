@@ -6876,7 +6876,8 @@
   },
   "projectFileDependencyGroups": {
     "net6.0": [
-      "Microsoft.NET.Sdk.Functions >= 4.5.0"
+      "Microsoft.NET.Sdk.Functions >= 4.5.0",
+      "System.Net.Http >= 4.3.4"
     ]
   },
   "packageFolders": {
@@ -6926,6 +6927,10 @@
           "Microsoft.NET.Sdk.Functions": {
             "target": "Package",
             "version": "[4.5.0, )"
+          },
+          "System.Net.Http": {
+            "target": "Package",
+            "version": "[4.3.4, )"
           }
         },
         "imports": [
