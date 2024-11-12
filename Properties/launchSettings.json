@@ -2,7 +2,7 @@
   "profiles": {
     "minkod": {
       "commandName": "Project",
-      "commandLineArgs": "--port 7093",
+      "commandLineArgs": "--port 7202",
       "launchBrowser": false
     }
   }

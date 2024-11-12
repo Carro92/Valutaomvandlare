@@ -116,4 +116,12 @@ rowkey, string, år-mån-da
 exchangerate, double, 9.5
 source, string (Skriv källan för valutakursen) (t.ex. Open Exchange Rates).
 
-## 
+## Logga in på  https://openexchangerates.org och hämta en API nyckel
+- Gå till  https://openexchangerates.org 
+- Skapa konto (Välj den som är gratis)
+- på frågan website så fyllde jag bara i min URI som jag hade ifrån min static web app
+- Gå in på fliken "App IDs" -> Det ska finnas en App Id som redan är skapad 
+- Kopiera API - Nyckeln
+
+## Gå nu till VS Code för att skapa en azure funktion
+- Välj en mapp där där projektet ska sparas, Välj språk; c#, välj .NET 6.0 LTS, template: HTTP trigger, funktion name: FetchExchangeRates, namespace: FetchExchangeRates.function, acessrights: Anonymous
