@@ -212,4 +212,7 @@ Eftersom att jag har kört "func start" i terminalen och fått ut en localhost U
 // Då ser du också valutorna.
 
 ____________________________________________________________________________________________________________________________
+# Nästa steg är att få funktionen upp till Azure portalen + att då kan man spara i table storage också
 
+## Gå in på VS Code
+-
