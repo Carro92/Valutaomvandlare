@@ -137,3 +137,56 @@ source, string (Skriv källan för valutakursen) (t.ex. Open Exchange Rates).
 - func start // Detta kommando ger en URL som man kan använda för att testa funktionen.
 - Trycker du på den URL så blir du skickade till en brownser där det står att du har lyckats om allt funkar.
 
+## Eftersom att API - nyckel är känslig info så måste vi lägga den i en miljövariabel // Den är tillgänglig så länge terminalen är öppen
+- Gå in på din "local.settings.json" fil och uppdatera den befintliga filen med  (under functions_worker)
+-  "OPENEXCHANGERATES_API_KEY": "din-api-nyckel-här" men lägg in din rätta api nyckel
+
+## Lägg in kod i "FetchExchangeRates" 
+using System;
+using System.Net.Http;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+
+namespace FetchExchangeRates.function
+{
+    public static class FetchExchangeRates
+    {
+        private static readonly HttpClient client = new HttpClient();
+
+        [FunctionName("FetchExchangeRates")]
+        public static async Task<IActionResult> Run(
+            [HttpTrigger(AuthorizationLevel.Function, "get", Route = null)] HttpRequest req,
+            ILogger log)
+        {
+            log.LogInformation("Fetching exchange rates from Open Exchange Rates API.");
+
+            // Hämta API-nyckeln från miljövariabeln
+            string apiKey = Environment.GetEnvironmentVariable("OPENEXCHANGERATES_API_KEY");
+            if (string.IsNullOrEmpty(apiKey))
+            {
+                log.LogError("API key is missing.");
+                return new BadRequestObjectResult("API key is missing.");
+            }
+
+            string url = $"https://openexchangerates.org/api/latest.json?app_id={apiKey}";
+
+            // Anropa API:et
+            HttpResponseMessage response = await client.GetAsync(url);
+            if (!response.IsSuccessStatusCode)
+            {
+                return new BadRequestObjectResult("Failed to fetch exchange rates.");
+            }
+
+            // Hämta och bearbeta svaret från API:et
+            string json = await response.Content.ReadAsStringAsync();
+            var exchangeRates = JsonConvert.DeserializeObject(json);
+
+            return new OkObjectResult(exchangeRates);
+        }
+    }
+}

@@ -10,26 +10,52 @@ using Newtonsoft.Json;
 
 namespace FetchExchangeRates.function
 {
+using System;
+using System.Net.Http;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+
+namespace FetchExchangeRates.function
+{
     public static class FetchExchangeRates
     {
+        private static readonly HttpClient client = new HttpClient();
+
         [FunctionName("FetchExchangeRates")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Function, "get", Route = null)] HttpRequest req,
             ILogger log)
         {
-            log.LogInformation("C# HTTP trigger function processed a request.");
+            log.LogInformation("Fetching exchange rates from Open Exchange Rates API.");
 
-            string name = req.Query["name"];
+            // Hämta API-nyckeln från miljövariabeln
+            string apiKey = Environment.GetEnvironmentVariable("OPENEXCHANGERATES_API_KEY");
+            if (string.IsNullOrEmpty(apiKey))
+            {
+                log.LogError("API key is missing.");
+                return new BadRequestObjectResult("API key is missing.");
+            }
 
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            dynamic data = JsonConvert.DeserializeObject(requestBody);
-            name = name ?? data?.name;
+            string url = $"https://openexchangerates.org/api/latest.json?app_id={apiKey}";
 
-            string responseMessage = string.IsNullOrEmpty(name)
-                ? "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."
-                : $"Hello, {name}. This HTTP triggered function executed successfully.";
+            // Anropa API:et
+            HttpResponseMessage response = await client.GetAsync(url);
+            if (!response.IsSuccessStatusCode)
+            {
+                return new BadRequestObjectResult("Failed to fetch exchange rates.");
+            }
 
-            return new OkObjectResult(responseMessage);
+            // Hämta och bearbeta svaret från API:et
+            string json = await response.Content.ReadAsStringAsync();
+            var exchangeRates = JsonConvert.DeserializeObject(json);
+
+            return new OkObjectResult(exchangeRates);
         }
     }
+}
 }
