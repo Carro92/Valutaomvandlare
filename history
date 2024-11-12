@@ -211,3 +211,5 @@ Eftersom att jag har kört "func start" i terminalen och fått ut en localhost U
 - curl http://localhost:7071/api/FetchExchangeRates
 // Då ser du också valutorna.
 
+____________________________________________________________________________________________________________________________
+
