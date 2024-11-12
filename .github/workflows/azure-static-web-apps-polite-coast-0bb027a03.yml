@@ -15,8 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     name: Build and Deploy Job
     permissions:
-       id-token: write
-       contents: read
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v3
         with:
@@ -28,19 +28,19 @@ jobs:
         uses: actions/github-script@v6
         id: idtoken
         with:
-           script: |
-               const coredemo = require('@actions/core')
-               return await coredemo.getIDToken()
-           result-encoding: string
+          script: |
+            const coredemo = require('@actions/core')
+            return await coredemo.getIDToken()
+          result-encoding: string
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_POLITE_COAST_0BB027A03 }}
           action: "upload"
-          app_location: "/Valutaomvandlare" # Appens källa
-          api_location: "" # Ingen API angiven
-          output_location: "." # Anger nu att artefakterna finns i den aktuella mappen
+          app_location: "src/www" # Uppdaterad plats för din frontend-app
+          api_location: "" # Ingen API angiven just nu
+          output_location: "." # Använd aktuell mapp som output
           github_id_token: ${{ steps.idtoken.outputs.result }}
 
   close_pull_request_job:
@@ -53,3 +53,5 @@ jobs:
         uses: Azure/static-web-apps-deploy@v1
         with:
           action: "close"
+          app_location: "src/www"
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_POLITE_COAST_0BB027A03 }}
