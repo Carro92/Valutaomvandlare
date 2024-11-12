@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("minkod")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3f0169281b7269cd21ecfecec25cc9f60155dd18")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+71d3284459bc1794c36a5aac92a63cd14d9633f9")]
 [assembly: System.Reflection.AssemblyProductAttribute("minkod")]
 [assembly: System.Reflection.AssemblyTitleAttribute("minkod")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

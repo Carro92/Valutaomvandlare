@@ -1,0 +1,170 @@
+## Efter att jag har skapat en azure funktion så ville jag lägga om det i mappar istället
+skapade mapparna
+- "config" - där jag la alla "_azurite_" filer
+- "src" - där jag skapade en till mapp som heter - "functionapp" med filen - "FetchExchangeRates.cs"
+samt en mapp till som heter "www" där jag har lagt filerna - "node_modules", "index.html", "package-lock.json", "package.json", "styles.css"
+- "host.json" och "local.settings.json" ligger kvar i root mappen.
+
+## koden i "FetchExchangeRates.cs" är
+"
+using System;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
+using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
+
+public static class FetchExchangeRates
+{
+    private static readonly HttpClient client = new HttpClient();
+
+    [FunctionName("FetchExchangeRates")]
+    public static async Task<HttpResponseMessage> Run(
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = null)] HttpRequestMessage req,
+        ILogger log)
+    {
+        string apiKey = Environment.GetEnvironmentVariable("OPENEXCHANGERATES_API_KEY");
+        string url = "https://openexchangerates.org/api/latest.json?app_id=" + apiKey;
+
+        var response = await client.GetStringAsync(url);
+        var data = JObject.Parse(response);
+
+        var rates = data["rates"];
+        
+        // Lista över de 10 mest populära valutorna som du vill visa
+        var popularCurrencies = new[] { "EUR", "GBP", "SEK", "USD", "AUD", "JPY", "CAD", "CHF", "NOK", "THB" };
+
+        // Skapa en ny lista med de populära valutorna
+        var filteredRates = new JObject();
+        foreach (var currency in popularCurrencies)
+        {
+            if (rates[currency] != null)
+            {
+                filteredRates[currency] = rates[currency];
+            }
+        }
+
+        // Svara med de filtrerade valutorna
+        var result = new JObject
+        {
+            ["base"] = data["base"],
+            ["rates"] = filteredRates
+        };
+
+        // Returnera de topp 10 valutorna som JSON
+        return new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(result.ToString(), System.Text.Encoding.UTF8, "application/json")
+        };
+    }
+}
+
+"
+## Koden i "minkod.csproj" :
+"
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <AzureFunctionsVersion>v4</AzureFunctionsVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="4.5.0" />
+    <PackageReference Include="System.Net.Http" Version="4.3.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="host.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="local.settings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+</Project>
+
+"
+
+## koden i min "local.settings.json":
+"
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true", 
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet",
+    "OPENEXCHANGERATES_API_KEY": "c6a67d02f1df4caba929b95769d56950"
+  }
+}
+"
+
+## koden i min "host.json"
+"
+{
+  "version": "2.0",
+  "logging": {
+    "applicationInsights": {
+      "samplingSettings": {
+        "isEnabled": true,
+        "excludedTypes": "Request"
+      },
+      "enableLiveMetricsFilters": true
+    }
+  }
+}
+
+"
+
+## koden i min index.html :
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valutaomvandlare</title>
+    <link rel="stylesheet" href="styles.css"> <!-- Om du skapar en CSS-fil -->
+</head>
+<body>
+    <h1>Välkommen till Valutaomvandlaren!</h1>
+    <p>Denna app kommer att hjälpa dig att omvandla valutor med aktuella växelkurser.</p>
+    <!-- Du kan lägga till mer innehåll här senare -->
+</body>
+</html>
+
+
+## Koden i min "package-lock.json":
+{
+  "name": "valutaomvandlare",
+  "version": "1.0.0",
+  "lockfileVersion": 3,
+  "requires": true,
+  "packages": {
+    "": {
+      "name": "valutaomvandlare",
+      "version": "1.0.0",
+      "license": "ISC"
+    }
+  }
+}
+
+
+## koden i min "package.json":
+"
+{
+  "name": "valutaomvandlare",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "echo 'No build step required'" 
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
+
+"
+
