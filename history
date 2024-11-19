@@ -27,23 +27,6 @@ En fil som heter "index.html" Förr att lägga till html kod och skriv in
     <!-- Du kan lägga till mer innehåll här senare -->
 </body>
 </html>
-
-
-"
-
-- Därefter skapar du en till fil som heter "styles.css" för att styla lite och skriv in
-"
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
-    margin: 0;
-    padding: 20px;
-}
-
-h1 {
-    color: #333;
-}
-
 "
 
 ## Skapa en package.json fil
@@ -506,4 +489,107 @@ __________________________Färdig med historik__________________________________
 
 # Utveckla frontend med Azure Static Web App
 
-## 
+## Skapa en fil i mappen "src" -> "www" och döp den till "script.js" // För att kunna visa växelkurser, konvertera valuta
+skriv in
+"
+document.addEventListener("DOMContentLoaded", () => {
+    const exchangeRatesContainer = document.getElementById("exchangeRatesContainer");
+    const currencyForm = document.getElementById("currencyForm");
+    const resultDiv = document.getElementById("result");
+
+    // Funktion för att hämta växelkurser
+    async function fetchExchangeRates() {
+        try {
+            const response = await fetch("http://localhost:7071/api/FetchExchangeRates");
+            const data = await response.json();
+
+            // Visa växelkurser i HTML
+            const ratesHtml = Object.entries(data.rates).map(([currency, rate]) => `
+                <div>${currency}: ${rate}</div>
+            `).join("");
+            exchangeRatesContainer.innerHTML = `<h2>Aktuella växelkurser</h2>${ratesHtml}`;
+        } catch (error) {
+            console.error("Kunde inte hämta växelkurser:", error);
+        }
+    }
+
+    // Funktion för att konvertera valutor
+    currencyForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const baseCurrency = document.getElementById("baseCurrency").value;
+        const targetCurrency = document.getElementById("targetCurrency").value;
+        const amount = parseFloat(document.getElementById("amount").value);
+
+        if (!baseCurrency || !targetCurrency || isNaN(amount)) {
+            resultDiv.innerText = "Alla fält måste fyllas i korrekt!";
+            return;
+        }
+
+        try {
+            const response = await fetch("http://localhost:7071/api/StoreConversionHistory", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    baseCurrency: baseCurrency.toUpperCase(),
+                    targetCurrency: targetCurrency.toUpperCase(),
+                    rate: amount
+                })
+            });
+
+            if (response.ok) {
+                resultDiv.innerText = `Konvertering från ${baseCurrency} till ${targetCurrency} sparades!`;
+            } else {
+                resultDiv.innerText = "Fel vid konvertering. Försök igen!";
+            }
+        } catch (error) {
+            console.error("Kunde inte utföra konverteringen:", error);
+        }
+    });
+
+    // Hämta växelkurser när sidan laddas
+    fetchExchangeRates();
+});
+
+"
+
+## Uppdatera index med ny info. Bland annat länkning till script.js
+"
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valutaomvandlare</title>
+    <link rel="stylesheet" href="styles.css"> <!-- CSS-fil -->
+</head>
+<body>
+    <h1>Välkommen till Valutaomvandlaren!</h1>
+    <p>Denna app hjälper dig att omvandla valutor med aktuella växelkurser.</p>
+
+    <!-- Plats för att visa aktuella växelkurser -->
+    <div id="exchangeRatesContainer"></div>
+
+    <!-- Formulär för valutaomvandling -->
+    <form id="currencyForm">
+        <label for="baseCurrency">Basvaluta:</label>
+        <input type="text" id="baseCurrency" placeholder="Ex: USD" required>
+        
+        <label for="targetCurrency">Målvaluta:</label>
+        <input type="text" id="targetCurrency" placeholder="Ex: SEK" required>
+        
+        <label for="amount">Belopp:</label>
+        <input type="number" id="amount" placeholder="Ex: 100" required>
+        
+        <button type="submit">Konvertera</button>
+    </form>
+
+    <!-- Plats för att visa resultat -->
+    <div id="result"></div>
+
+    <!-- JavaScript-fil -->
+    <script src="script.js"></script>
+</body>
+</html>
+
+"
