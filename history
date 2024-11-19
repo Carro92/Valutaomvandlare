@@ -492,64 +492,48 @@ __________________________Färdig med historik__________________________________
 ## Skapa en fil i mappen "src" -> "www" och döp den till "script.js" // För att kunna visa växelkurser, konvertera valuta
 skriv in
 "
-document.addEventListener("DOMContentLoaded", () => {
-    const exchangeRatesContainer = document.getElementById("exchangeRatesContainer");
-    const currencyForm = document.getElementById("currencyForm");
-    const resultDiv = document.getElementById("result");
+// URL till API:et
+const apiUrl = "http://localhost:7071/api/FetchExchangeRates";
 
-    // Funktion för att hämta växelkurser
-    async function fetchExchangeRates() {
-        try {
-            const response = await fetch("http://localhost:7071/api/FetchExchangeRates");
-            const data = await response.json();
+// Funktion för att hämta växelkurser
+async function fetchExchangeRates() {
+    try {
+        const response = await fetch(apiUrl, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
 
-            // Visa växelkurser i HTML
-            const ratesHtml = Object.entries(data.rates).map(([currency, rate]) => `
-                <div>${currency}: ${rate}</div>
-            `).join("");
-            exchangeRatesContainer.innerHTML = `<h2>Aktuella växelkurser</h2>${ratesHtml}`;
-        } catch (error) {
-            console.error("Kunde inte hämta växelkurser:", error);
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
         }
+
+        const data = await response.json();
+        displayExchangeRates(data.rates); // Skicka 'rates' till display-funktionen
+    } catch (error) {
+        console.error("Error fetching exchange rates:", error);
+    }
+}
+
+// Funktion för att visa växelkurser i HTML
+function displayExchangeRates(rates) {
+    const container = document.getElementById("exchangeRatesContainer");
+    const list = document.createElement("ul");
+
+    for (const [currency, rate] of Object.entries(rates)) {
+        const listItem = document.createElement("li");
+        listItem.textContent = `${currency}: ${rate.toFixed(2)}`;
+        list.appendChild(listItem);
     }
 
-    // Funktion för att konvertera valutor
-    currencyForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
+    container.innerHTML = ""; // Rensa eventuell tidigare data
+    container.appendChild(list);
+}
 
-        const baseCurrency = document.getElementById("baseCurrency").value;
-        const targetCurrency = document.getElementById("targetCurrency").value;
-        const amount = parseFloat(document.getElementById("amount").value);
+// Anropa funktionen när sidan laddas
+window.onload = fetchExchangeRates;
 
-        if (!baseCurrency || !targetCurrency || isNaN(amount)) {
-            resultDiv.innerText = "Alla fält måste fyllas i korrekt!";
-            return;
-        }
-
-        try {
-            const response = await fetch("http://localhost:7071/api/StoreConversionHistory", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    baseCurrency: baseCurrency.toUpperCase(),
-                    targetCurrency: targetCurrency.toUpperCase(),
-                    rate: amount
-                })
-            });
-
-            if (response.ok) {
-                resultDiv.innerText = `Konvertering från ${baseCurrency} till ${targetCurrency} sparades!`;
-            } else {
-                resultDiv.innerText = "Fel vid konvertering. Försök igen!";
-            }
-        } catch (error) {
-            console.error("Kunde inte utföra konverteringen:", error);
-        }
-    });
-
-    // Hämta växelkurser när sidan laddas
-    fetchExchangeRates();
-});
 
 "
 
@@ -561,14 +545,17 @@ document.addEventListener("DOMContentLoaded", () => {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Valutaomvandlare</title>
-    <link rel="stylesheet" href="styles.css"> <!-- CSS-fil -->
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <h1>Välkommen till Valutaomvandlaren!</h1>
     <p>Denna app hjälper dig att omvandla valutor med aktuella växelkurser.</p>
 
     <!-- Plats för att visa aktuella växelkurser -->
-    <div id="exchangeRatesContainer"></div>
+    <div id="exchangeRatesContainer">
+        <h2>Aktuella växelkurser:</h2>
+        <!-- Växelkurserna kommer att visas här -->
+    </div>
 
     <!-- Formulär för valutaomvandling -->
     <form id="currencyForm">
@@ -587,9 +574,121 @@ document.addEventListener("DOMContentLoaded", () => {
     <!-- Plats för att visa resultat -->
     <div id="result"></div>
 
-    <!-- JavaScript-fil -->
     <script src="script.js"></script>
 </body>
 </html>
 
+
 "
+
+## För att styla sidan skapa en fil "styles.css" i mappen "src" -> "www" och skriv in 
+"
+/* Allmänna stilar */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+    line-height: 1.6;
+    color: #333;
+}
+
+/* Rubriker */
+h1 {
+    color: #444;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* För formuläret */
+form {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    margin: 0 auto 20px auto;
+}
+
+form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+form input {
+    width: calc(100% - 20px);
+    padding: 8px 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+form button {
+    display: block;
+    width: 100%;
+    padding: 10px 15px;
+    background: #0078D7;
+    color: #fff;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: center;
+}
+
+form button:hover {
+    background: #005bb5;
+}
+
+/* För resultatet */
+#result {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 18px;
+    color: #0078D7;
+    font-weight: bold;
+}
+
+/* För växelkurscontainern */
+#exchangeRatesContainer {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    margin: 0 auto 20px auto;
+    text-align: left;
+}
+
+#exchangeRatesContainer h2 {
+    margin-top: 0;
+    text-align: center;
+    color: #444;
+}
+
+#exchangeRatesContainer ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+#exchangeRatesContainer li {
+    padding: 8px 0;
+    border-bottom: 1px solid #ddd;
+    font-size: 16px;
+}
+
+#exchangeRatesContainer li:last-child {
+    border-bottom: none;
+}
+
+"
+
+// Det som är fixat i style nu är då: En vit bakgrund, skuggning, och rundade hörn för att göra det mer visuellt tilltalande.
+Knappen är blå och förändras när man håller musen över den
+
+## högerklicka och öppna terminalen i mappen som index ligger i och skriv in:
+- npx http-server
+Då kommer du att få ut en URL som du ska lägga in i host.json 
+- När du kör func start i en terminal och den andra terminalen i index är öppen så kan du ta url och klistra in i webbläsaren för att se din frontend.

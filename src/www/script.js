@@ -1,58 +1,41 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const exchangeRatesContainer = document.getElementById("exchangeRatesContainer");
-    const currencyForm = document.getElementById("currencyForm");
-    const resultDiv = document.getElementById("result");
+// URL till API:et
+const apiUrl = "http://localhost:7071/api/FetchExchangeRates";
 
-    // Funktion för att hämta växelkurser
-    async function fetchExchangeRates() {
-        try {
-            const response = await fetch("http://localhost:7071/api/FetchExchangeRates");
-            const data = await response.json();
+// Funktion för att hämta växelkurser
+async function fetchExchangeRates() {
+    try {
+        const response = await fetch(apiUrl, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
 
-            // Visa växelkurser i HTML
-            const ratesHtml = Object.entries(data.rates).map(([currency, rate]) => `
-                <div>${currency}: ${rate}</div>
-            `).join("");
-            exchangeRatesContainer.innerHTML = `<h2>Aktuella växelkurser</h2>${ratesHtml}`;
-        } catch (error) {
-            console.error("Kunde inte hämta växelkurser:", error);
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
         }
+
+        const data = await response.json();
+        displayExchangeRates(data.rates); // Skicka 'rates' till display-funktionen
+    } catch (error) {
+        console.error("Error fetching exchange rates:", error);
+    }
+}
+
+// Funktion för att visa växelkurser i HTML
+function displayExchangeRates(rates) {
+    const container = document.getElementById("exchangeRatesContainer");
+    const list = document.createElement("ul");
+
+    for (const [currency, rate] of Object.entries(rates)) {
+        const listItem = document.createElement("li");
+        listItem.textContent = `${currency}: ${rate.toFixed(2)}`;
+        list.appendChild(listItem);
     }
 
-    // Funktion för att konvertera valutor
-    currencyForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
+    container.innerHTML = ""; // Rensa eventuell tidigare data
+    container.appendChild(list);
+}
 
-        const baseCurrency = document.getElementById("baseCurrency").value;
-        const targetCurrency = document.getElementById("targetCurrency").value;
-        const amount = parseFloat(document.getElementById("amount").value);
-
-        if (!baseCurrency || !targetCurrency || isNaN(amount)) {
-            resultDiv.innerText = "Alla fält måste fyllas i korrekt!";
-            return;
-        }
-
-        try {
-            const response = await fetch("http://localhost:7071/api/StoreConversionHistory", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    baseCurrency: baseCurrency.toUpperCase(),
-                    targetCurrency: targetCurrency.toUpperCase(),
-                    rate: amount
-                })
-            });
-
-            if (response.ok) {
-                resultDiv.innerText = `Konvertering från ${baseCurrency} till ${targetCurrency} sparades!`;
-            } else {
-                resultDiv.innerText = "Fel vid konvertering. Försök igen!";
-            }
-        } catch (error) {
-            console.error("Kunde inte utföra konverteringen:", error);
-        }
-    });
-
-    // Hämta växelkurser när sidan laddas
-    fetchExchangeRates();
-});
+// Anropa funktionen när sidan laddas
+window.onload = fetchExchangeRates;

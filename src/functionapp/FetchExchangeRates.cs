@@ -9,45 +9,49 @@ using Newtonsoft.Json.Linq;
 
 public static class FetchExchangeRates
 {
-    private static readonly HttpClient client = new HttpClient();
-
     [FunctionName("FetchExchangeRates")]
     public static async Task<HttpResponseMessage> Run(
         [HttpTrigger(AuthorizationLevel.Function, "get", Route = null)] HttpRequestMessage req,
         ILogger log)
     {
+        log.LogInformation("Fetching exchange rates...");
+
         string apiKey = Environment.GetEnvironmentVariable("OPENEXCHANGERATES_API_KEY");
-        string url = "https://openexchangerates.org/api/latest.json?app_id=" + apiKey;
+        string url = $"https://openexchangerates.org/api/latest.json?app_id={apiKey}";
 
-        var response = await client.GetStringAsync(url);
-        var data = JObject.Parse(response);
+        HttpClient client = new HttpClient();
+        var response = await client.GetAsync(url);
+        var data = await response.Content.ReadAsStringAsync();
+        var json = JObject.Parse(data);
 
-        var rates = data["rates"];
-        
-        // Lista över de 10 mest populära valutorna som du vill visa
+        var filteredRates = new JObject();
         var popularCurrencies = new[] { "EUR", "GBP", "SEK", "USD", "AUD", "JPY", "CAD", "CHF", "NOK", "THB" };
 
-        // Skapa en ny lista med de populära valutorna
-        var filteredRates = new JObject();
         foreach (var currency in popularCurrencies)
         {
-            if (rates[currency] != null)
+            if (json["rates"][currency] != null)
             {
-                filteredRates[currency] = rates[currency];
+                filteredRates[currency] = json["rates"][currency];
             }
         }
 
-        // Svara med de filtrerade valutorna
         var result = new JObject
         {
-            ["base"] = data["base"],
+            ["base"] = json["base"],
             ["rates"] = filteredRates
         };
 
-        // Returnera de topp 10 valutorna som JSON
-        return new HttpResponseMessage(HttpStatusCode.OK)
+        // Skapa ett HTTP-svar med CORS-headers
+        var responseMessage = new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = new StringContent(result.ToString(), System.Text.Encoding.UTF8, "application/json")
         };
+
+        // Lägg till CORS-stöd
+        responseMessage.Headers.Add("Access-Control-Allow-Origin", "*"); // Tillåter alla origin
+        responseMessage.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS");
+        responseMessage.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
+
+        return responseMessage;
     }
 }
