@@ -9,6 +9,7 @@ async function fetchExchangeRates() {
             headers: {
                 "Content-Type": "application/json",
             },
+            mode: "cors" // Aktivera CORS
         });
 
         if (!response.ok) {
