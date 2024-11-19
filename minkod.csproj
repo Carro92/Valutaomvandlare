@@ -1,12 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <AzureFunctionsVersion>v4</AzureFunctionsVersion>
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Azure Table Storage SDK -->
+    <PackageReference Include="Azure.Data.Tables" Version="12.8.0" />
+    
+    <!-- JSON-hantering -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    
+    <!-- Azure Functions SDK -->
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="4.5.0" />
-    <PackageReference Include="System.Net.Http" Version="4.3.4" />
   </ItemGroup>
 
   <ItemGroup>

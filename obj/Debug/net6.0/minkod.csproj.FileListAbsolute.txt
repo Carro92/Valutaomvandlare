@@ -2,7 +2,10 @@ C:\Users\The_C\Desktop\minkod\bin\output\host.json
 C:\Users\The_C\Desktop\minkod\bin\output\local.settings.json
 C:\Users\The_C\Desktop\minkod\bin\output\minkod.deps.json
 C:\Users\The_C\Desktop\minkod\bin\output\minkod.dll
+C:\Users\The_C\Desktop\minkod\bin\output\ref\minkod.dll
 C:\Users\The_C\Desktop\minkod\bin\output\minkod.pdb
+C:\Users\The_C\Desktop\minkod\bin\output\Azure.Core.dll
+C:\Users\The_C\Desktop\minkod\bin\output\Azure.Data.Tables.dll
 C:\Users\The_C\Desktop\minkod\bin\output\System.Net.Http.Formatting.dll
 C:\Users\The_C\Desktop\minkod\bin\output\Microsoft.AspNetCore.Authentication.Abstractions.dll
 C:\Users\The_C\Desktop\minkod\bin\output\Microsoft.AspNetCore.Authentication.Core.dll
@@ -28,6 +31,7 @@ C:\Users\The_C\Desktop\minkod\bin\output\Microsoft.Azure.WebJobs.dll
 C:\Users\The_C\Desktop\minkod\bin\output\Microsoft.Azure.WebJobs.Extensions.dll
 C:\Users\The_C\Desktop\minkod\bin\output\Microsoft.Azure.WebJobs.Extensions.Http.dll
 C:\Users\The_C\Desktop\minkod\bin\output\Microsoft.Azure.WebJobs.Host.Storage.dll
+C:\Users\The_C\Desktop\minkod\bin\output\Microsoft.Bcl.AsyncInterfaces.dll
 C:\Users\The_C\Desktop\minkod\bin\output\Microsoft.DotNet.PlatformAbstractions.dll
 C:\Users\The_C\Desktop\minkod\bin\output\Microsoft.Extensions.Configuration.dll
 C:\Users\The_C\Desktop\minkod\bin\output\Microsoft.Extensions.Configuration.Abstractions.dll
@@ -60,7 +64,10 @@ C:\Users\The_C\Desktop\minkod\bin\Debug\net6.0\host.json
 C:\Users\The_C\Desktop\minkod\bin\Debug\net6.0\local.settings.json
 C:\Users\The_C\Desktop\minkod\bin\Debug\net6.0\minkod.deps.json
 C:\Users\The_C\Desktop\minkod\bin\Debug\net6.0\minkod.dll
+C:\Users\The_C\Desktop\minkod\bin\Debug\net6.0\ref\minkod.dll
 C:\Users\The_C\Desktop\minkod\bin\Debug\net6.0\minkod.pdb
+C:\Users\The_C\Desktop\minkod\bin\Debug\net6.0\Azure.Core.dll
+C:\Users\The_C\Desktop\minkod\bin\Debug\net6.0\Azure.Data.Tables.dll
 C:\Users\The_C\Desktop\minkod\bin\Debug\net6.0\System.Net.Http.Formatting.dll
 C:\Users\The_C\Desktop\minkod\bin\Debug\net6.0\Microsoft.AspNetCore.Authentication.Abstractions.dll
 C:\Users\The_C\Desktop\minkod\bin\Debug\net6.0\Microsoft.AspNetCore.Authentication.Core.dll
@@ -86,6 +93,7 @@ C:\Users\The_C\Desktop\minkod\bin\Debug\net6.0\Microsoft.Azure.WebJobs.dll
 C:\Users\The_C\Desktop\minkod\bin\Debug\net6.0\Microsoft.Azure.WebJobs.Extensions.dll
 C:\Users\The_C\Desktop\minkod\bin\Debug\net6.0\Microsoft.Azure.WebJobs.Extensions.Http.dll
 C:\Users\The_C\Desktop\minkod\bin\Debug\net6.0\Microsoft.Azure.WebJobs.Host.Storage.dll
+C:\Users\The_C\Desktop\minkod\bin\Debug\net6.0\Microsoft.Bcl.AsyncInterfaces.dll
 C:\Users\The_C\Desktop\minkod\bin\Debug\net6.0\Microsoft.DotNet.PlatformAbstractions.dll
 C:\Users\The_C\Desktop\minkod\bin\Debug\net6.0\Microsoft.Extensions.Configuration.dll
 C:\Users\The_C\Desktop\minkod\bin\Debug\net6.0\Microsoft.Extensions.Configuration.Abstractions.dll
@@ -119,9 +127,7 @@ C:\Users\The_C\Desktop\minkod\obj\Debug\net6.0\minkod.GeneratedMSBuildEditorConf
 C:\Users\The_C\Desktop\minkod\obj\Debug\net6.0\minkod.AssemblyInfoInputs.cache
 C:\Users\The_C\Desktop\minkod\obj\Debug\net6.0\minkod.AssemblyInfo.cs
 C:\Users\The_C\Desktop\minkod\obj\Debug\net6.0\minkod.csproj.CoreCompileInputs.cache
-C:\Users\The_C\Desktop\minkod\obj\Debug\net6.0\minkod.sourcelink.json
 C:\Users\The_C\Desktop\minkod\obj\Debug\net6.0\minkod.csproj.CopyComplete
 C:\Users\The_C\Desktop\minkod\obj\Debug\net6.0\minkod.dll
-C:\Users\The_C\Desktop\minkod\obj\Debug\net6.0\refint\minkod.dll
-C:\Users\The_C\Desktop\minkod\obj\Debug\net6.0\minkod.pdb
 C:\Users\The_C\Desktop\minkod\obj\Debug\net6.0\ref\minkod.dll
+C:\Users\The_C\Desktop\minkod\obj\Debug\net6.0\minkod.pdb

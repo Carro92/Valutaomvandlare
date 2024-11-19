@@ -253,4 +253,257 @@ Klicka på Review + create och skapa den.
 
 - Testa med URL genom att gå till knappen "get function URL" bredvid "test/run" knappen och kopiera "default (Function key)"in den koden i en webbläsare. 
 
-    
+##  Datalagringen i Azure Table Storage
+- Gå till vs code 
+- I mappen "src" -> "functionapp" skapar du en ny mapp som "StoreExchangeRates"  i den mappen skapar du en fil som heter "StoreExchangeRates.cs"
+- I filen skriver du 
+"
+using System;
+using System.Threading.Tasks;
+using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Azure.Data.Tables;
+
+public static class StoreExchangeRates
+{
+    [FunctionName("StoreExchangeRates")]
+    public static async Task<OkResult> Run(
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req,
+        ILogger log)
+    {
+        log.LogInformation("StoreExchangeRates function triggered.");
+
+        // Hämta JSON från förfrågan
+        string requestBody = await req.ReadAsStringAsync();
+        
+        // Deserialisera JSON till en dynamisk objekt
+        var exchangeRates = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(requestBody);
+
+        // Koppla till Azure Table Storage
+        string connectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
+        var tableClient = new TableClient(connectionString, "ExchangeRates");
+
+        // Skapa tabellen om den inte redan finns
+        await tableClient.CreateIfNotExistsAsync();
+
+        // Loopa igenom och lagra varje valutakurs
+        foreach (var rate in exchangeRates.rates)
+        {
+            var entity = new TableEntity(exchangeRates["base"].ToString(), rate.Name)
+            {
+                {"Rate", rate.Value.ToString()}
+            };
+            await tableClient.UpsertEntityAsync(entity);
+        }
+
+        // Skicka svar
+        log.LogInformation("Exchange rates saved to Table Storage.");
+        return new OkResult();
+    }
+}
+
+"
+
+## Öppna local.settings.json
+- lägg till 
+"
+{
+    "AzureWebJobsStorage": "<din_storage_account_connection_string>"
+}
+
+"
+- Din <din_storage_account_connection_string> hittar du inne i Azure portalen "storage account" -> "security + networking" -> ""access keys" och kopiera den och klistra in den i vs code 
+
+- Starta sedan om VS Code 
+
+## Testa nu om det funkar
+- Skriv func start i terminalen på root katalogen
+- funkar det som det ska kommer du att få två localhost. En get som du kommer direkt in på och en post. 
+- Nu går du in på din "Thunder client" i vänsta spalten i vs code för att göra en post begäran.
+- Välj "post", skriv in post URL som du fick i func start. Gå sedan till "Headers" och lägg till "Keys" - "Content-Type" samt "Value" - "application/json"
+- Gå sedan till fliken "Body" och välj "json" och skriv in 
+"
+{
+  "base": "USD",
+  "rates": {
+    "EUR": 1.1,
+    "SEK": 10.5
+  }
+}
+"
+
+- Tryck sedan på "send". Funkar det som det ska kommer det att stå status:200 ok
+
+## Gå in via Azure storage explorer
+- Se till att vara inloggad och sen gå vidare till din tabell
+- Där kan du se vilka som har lagt till och du kan även ta bort/ redigera också
+
+## För att skapa en koverterings historik
+- Gå in på Azure Storage Explorer -> "Storage account" -> "Tables" 
+- Högerklicka på "Tables" och välj "Create table"
+- Döp tabellen till någonting valfritt (ConversionHistory)
+
+
+## Skapa en ny Azure Function för att spara konverteringshistorik //Ta emot data från frontend och spara det i ConversionHistory-tabellen
+- Gå till VS Code
+- Gå till "Azure Function App"-mapp i VS Code.
+- För att skapa en ny function skriv i terminalen "func new "
+- Av alternativen som dyker upp välj "2. HttpTrigger" 
+- Döp den till valfritt (StoreConversionHistory)
+
+- Skapa nu en mapp i "src/functionapp" och döp den till "StoreConversionHistory"
+- Flytta "StoreConversionHistory.cs" filen till den nya mappen du skapat
+- Skapa en ny fil i den mappen och döp den till "function.json"
+Fyll i detta i filen // Denna fil beskriver hur din funktion triggas och vilket resultat den returnerar.
+"
+{
+  "bindings": [
+    {
+      "authLevel": "function",
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "req",
+      "methods": ["get", "post"]
+    },
+    {
+      "type": "http",
+      "direction": "out",
+      "name": "$return"
+    }
+  ]
+}
+
+"
+- Gå in på "local.settings.json" // Hantera specifika funktioner som arbetar med Azure Table Storage.
+uppdatera koden som finns med "TableStorageConnectionString": och samma anslutningssträng som AzureWebJobsStorage
+
+- Gå till "StoreConversionHistory.cs" och uppdatera den med ny kod
+"
+using System;
+using System.IO;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Azure;
+using Azure.Data.Tables;
+using Newtonsoft.Json;
+
+namespace minkod
+{
+    public static class StoreConversionHistory
+    {
+        [FunctionName("StoreConversionHistory")]
+        public static async Task<IActionResult> Run(
+            [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req,
+            ILogger log)
+        {
+            log.LogInformation("Processing conversion history...");
+
+            // Läs JSON från begäran
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            dynamic data = JsonConvert.DeserializeObject(requestBody);
+
+            // Validera ingångsdata
+            string baseCurrency = data?.baseCurrency;
+            string targetCurrency = data?.targetCurrency;
+            double rate = data?.rate ?? 0;
+            DateTime conversionDate = DateTime.UtcNow;
+
+            if (string.IsNullOrEmpty(baseCurrency) || string.IsNullOrEmpty(targetCurrency) || rate <= 0)
+            {
+                return new BadRequestObjectResult("Invalid input. Please provide baseCurrency, targetCurrency, and rate.");
+            }
+
+            // Hämta anslutningssträngen från miljövariabler
+            string connectionString = Environment.GetEnvironmentVariable("TableStorageConnectionString");
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                log.LogError("TableStorageConnectionString is not set.");
+                return new StatusCodeResult(500);
+            }
+
+            // Anslut till Azure Table Storage
+            var tableClient = new TableClient(connectionString, "ConversionHistory");
+
+            // Skapa tabellen om den inte finns
+            try
+            {
+                await tableClient.CreateIfNotExistsAsync();
+                log.LogInformation("Table 'ConversionHistory' is ready.");
+            }
+            catch (Exception ex)
+            {
+                log.LogError($"Error creating or accessing the table: {ex.Message}");
+                return new StatusCodeResult(500);
+            }
+
+            // Skapa en ny entitet
+            var conversionEntity = new ConversionEntity
+            {
+                PartitionKey = baseCurrency,
+                RowKey = $"{targetCurrency}-{Guid.NewGuid()}", // Kombinerar TargetCurrency med GUID, // Unikt ID för raden
+                TargetCurrency = targetCurrency,
+                Rate = rate,
+                ConversionDate = conversionDate,
+                Timestamp = DateTimeOffset.UtcNow
+            };
+
+            // Lägg till entiteten i tabellen
+            try
+            {
+                await tableClient.AddEntityAsync(conversionEntity);
+                log.LogInformation("Conversion history saved successfully.");
+            }
+            catch (Exception ex)
+            {
+                log.LogError($"Error saving conversion history: {ex.Message}");
+                return new StatusCodeResult(500);
+            }
+
+            return new OkObjectResult($"Conversion from {baseCurrency} to {targetCurrency} saved.");
+        }
+
+        public class ConversionEntity : ITableEntity
+        {
+            public string PartitionKey { get; set; }
+            public string RowKey { get; set; }
+            public string TargetCurrency { get; set; }
+            public double Rate { get; set; }
+            public DateTime ConversionDate { get; set; }
+            public DateTimeOffset? Timestamp { get; set; }
+            public ETag ETag { get; set; } = ETag.All;
+        }
+    }
+}
+
+
+"
+
+## För att kolla om det funkar
+skriv i terminalen
+- Func start
+- Kopiera sedan " StoreConversionHistory: [POST] http://localhost:7071/api/StoreConversionHistory"
+- Gå in på "Thunder client" och gör en ny post- förfrågan
+- Välj post och klistra in localhost länken. Gå in på "body" och välj json och fyll i 
+" {
+  "baseCurrency": "USD",
+  "targetCurrency": "SEK",
+  "rate": 10.5
+}
+"
+- Tryck på send.
+- Blir det grönt och står 200 ok så är det rätt.
+
+Du kan gå in i "Azure storage explorer" och där ser du att du har tabellen "ConversionHistory". Tittar du i den ska du se att den har uppdaterats. 
+
+__________________________Färdig med historik____________________________________
+
+# Utveckla frontend med Azure Static Web App
+
+## 
