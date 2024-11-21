@@ -689,6 +689,6 @@ form button:hover {
 Knappen är blå och förändras när man håller musen över den
 
 ## högerklicka och öppna terminalen i mappen som index ligger i och skriv in:
-- npx http-server
+- npx http-server --cors
 Då kommer du att få ut en URL som du ska lägga in i host.json 
 - När du kör func start i en terminal och den andra terminalen i index är öppen så kan du ta url och klistra in i webbläsaren för att se din frontend.

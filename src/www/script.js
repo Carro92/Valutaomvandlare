@@ -1,5 +1,7 @@
 // URL till API:et
-const apiUrl = "http://localhost:7071/api/FetchExchangeRates";
+const apiUrl = "http://127.0.0.1:7071/api/FetchExchangeRates"; // För localhost backend
+
+
 
 // Funktion för att hämta växelkurser
 async function fetchExchangeRates() {

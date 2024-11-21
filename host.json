@@ -2,7 +2,7 @@
   "version": "2.0",
   "extensions": {
     "http": {
-      "routePrefix": "",
+      "routePrefix": "api",
       "maxOutstandingRequests": 200,
       "maxConcurrentRequests": 200,
       "dynamicThrottlesEnabled": true
@@ -14,15 +14,6 @@
         "isEnabled": true,
         "excludedTypes": "Request"
       }
-    }
-  },
-  "http": {
-    "cors": {
-      "allowedOrigins": [
-        "http://127.0.0.1:8081",
-        "http://localhost:7071"
-      ],
-      "supportCredentials": false
     }
   }
 }

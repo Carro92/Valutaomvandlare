@@ -13,74 +13,64 @@ public static class FetchExchangeRates
 
     [FunctionName("FetchExchangeRates")]
     public static async Task<HttpResponseMessage> Run(
-        [HttpTrigger(AuthorizationLevel.Function, "get", Route = null)] HttpRequestMessage req,
+        [HttpTrigger(AuthorizationLevel.Function, "get", "options", Route = null)] HttpRequestMessage req,
         ILogger log)
     {
         log.LogInformation("Fetching exchange rates...");
 
-        try
+        // Hämta CORS-konfiguration från miljövariabel
+        string corsOrigins = Environment.GetEnvironmentVariable("CORS_ALLOWED_ORIGINS");
+        log.LogInformation("CORS allowed origins: " + corsOrigins);
+
+        // Hantera OPTIONS-förfrågningar
+        if (req.Method == HttpMethod.Options)
         {
-            // Hämta API-nyckeln från miljövariabel
-            string apiKey = Environment.GetEnvironmentVariable("OPENEXCHANGERATES_API_KEY");
-            if (string.IsNullOrEmpty(apiKey))
-            {
-                log.LogError("OPENEXCHANGERATES_API_KEY is not set.");
-                return new HttpResponseMessage(HttpStatusCode.InternalServerError)
-                {
-                    Content = new StringContent("API key is missing.")
-                };
-            }
+            var optionsResponse = new HttpResponseMessage(HttpStatusCode.OK);
+            
+            // Tillåter flera origin-domäner
+            optionsResponse.Headers.Add("Access-Control-Allow-Origin", corsOrigins); // Tillåter angivna domäner
+            optionsResponse.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS"); // Tillåt metoder
+            optionsResponse.Headers.Add("Access-Control-Allow-Headers", "Content-Type"); // Tillåt headers
 
-            // Skapa URL för API-anropet
-            string url = $"https://openexchangerates.org/api/latest.json?app_id={apiKey}";
-
-            // Anropa Open Exchange Rates API
-            var response = await client.GetStringAsync(url);
-            var data = JObject.Parse(response);
-
-            var rates = data["rates"];
-
-            // Lista över de populäraste valutorna att filtrera
-            var popularCurrencies = new[] { "EUR", "GBP", "SEK", "USD", "AUD", "JPY", "CAD", "CHF", "NOK", "THB" };
-
-            // Filtrera kurser för de populära valutorna
-            var filteredRates = new JObject();
-            foreach (var currency in popularCurrencies)
-            {
-                if (rates[currency] != null)
-                {
-                    filteredRates[currency] = rates[currency];
-                }
-            }
-
-            // Skapa ett svar med de filtrerade kurserna
-            var result = new JObject
-            {
-                ["base"] = data["base"],
-                ["rates"] = filteredRates
-            };
-
-            // Skapa HTTP-svaret
-            var responseMessage = new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent(result.ToString(), System.Text.Encoding.UTF8, "application/json")
-            };
-
-            // Lägg till CORS-headers
-            responseMessage.Headers.Add("Access-Control-Allow-Origin", "*");
-            responseMessage.Headers.Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-            responseMessage.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
-
-            log.LogInformation("Exchange rates fetched successfully.");
-            return responseMessage;
+            return optionsResponse;
         }
-        catch (Exception ex)
+
+        // Hämta data från API
+        string apiKey = Environment.GetEnvironmentVariable("OPENEXCHANGERATES_API_KEY");
+        string url = $"https://openexchangerates.org/api/latest.json?app_id={apiKey}";
+
+        var response = await client.GetStringAsync(url);
+        var data = JObject.Parse(response);
+
+        // Filtrera valutorna
+        var popularCurrencies = new[] { "EUR", "GBP", "SEK", "USD", "AUD", "JPY", "CAD", "CHF", "NOK", "THB" };
+        var filteredRates = new JObject();
+
+        foreach (var currency in popularCurrencies)
         {
-            log.LogError($"Error fetching exchange rates: {ex.Message}");
-            return new HttpResponseMessage(HttpStatusCode.InternalServerError)
+            if (data["rates"][currency] != null)
             {
-                Content = new StringContent($"Error fetching exchange rates: {ex.Message}")
-            };
+                filteredRates[currency] = data["rates"][currency];
+            }
         }
+
+        var result = new JObject
+        {
+            ["base"] = data["base"],
+            ["rates"] = filteredRates
+        };
+
+        // Returnera data med CORS-header
+        var responseMessage = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(result.ToString(), System.Text.Encoding.UTF8, "application/json")
+        };
+
+        // Lägg till CORS-headers för att tillåta förfrågningar från angivna origin-domäner
+        responseMessage.Headers.Add("Access-Control-Allow-Origin", corsOrigins);
+        responseMessage.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS"); 
+        responseMessage.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
+
+        return responseMessage;
     }
 }
