@@ -10,9 +10,10 @@ async function fetchExchangeRates() {
     try {
         console.log("Sending request to API:", apiUrl); // Debug-logg
         const response = await fetch(apiUrl, {
-            method: "POST",
+            method: "GET",
             headers: {
                 "Content-Type": "application/json",
+                "x-functions-key": "2RL2SoFlskqGdNAUtz0wfAapPBHSpo6l-qgO5qlgDtwhAzFuAHATWw==" 
             },
         });
 
