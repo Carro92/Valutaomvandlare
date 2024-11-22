@@ -12,8 +12,7 @@ async function fetchExchangeRates() {
         const response = await fetch(apiUrl, {
             method: "GET",
             headers: {
-                "Content-Type": "application/json",
-                "x-functions-key": "2RL2SoFlskqGdNAUtz0wfAapPBHSpo6l-qgO5qlgDtwhAzFuAHATWw==" 
+                "Content-Type": "application/json"
             },
         });
 
