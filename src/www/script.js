@@ -1,60 +1,79 @@
-// URL till API:et
-const apiUrl = "http://127.0.0.1:7071/api/FetchExchangeRates"; // För localhost backend
+const apiUrl = "http://127.0.0.1:7071/api/FetchExchangeRates";
 
-
-
-// Funktion för att hämta växelkurser
+// Funktion för att hämta växelkurser (GET)
 async function fetchExchangeRates() {
-    console.log("Start fetching exchange rates..."); // Debug-logg
-
+    console.log("Start fetching exchange rates...");
     try {
-        console.log("Sending request to API:", apiUrl); // Debug-logg
         const response = await fetch(apiUrl, {
-            method: "GET",
+            method: "GET", // Gör GET-förfrågan för att hämta valutakurser
             headers: {
                 "Content-Type": "application/json"
-            },
+            }
         });
 
-        console.log("Response received:", response); // Debug-logg
-
         if (!response.ok) {
-            console.error("API response is not OK. Status:", response.status); // Debug-logg
+            console.error("API response is not OK. Status:", response.status);
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log("Data fetched successfully:", data); // Debug-logg
-        displayExchangeRates(data.rates); // Skicka 'rates' till display-funktionen
+        console.log("Data fetched successfully:", data);
+        displayExchangeRates(data.rates); // Visa de hämtade valutorna
     } catch (error) {
-        console.error("Error fetching exchange rates:", error); // Debug-logg
+        console.error("Error fetching exchange rates:", error);
     }
-
-    console.log("Finished fetching exchange rates."); // Debug-logg
 }
 
 // Funktion för att visa växelkurser i HTML
 function displayExchangeRates(rates) {
-    console.log("Displaying exchange rates:", rates); // Debug-logg
-
     const container = document.getElementById("exchangeRatesContainer");
     const list = document.createElement("ul");
 
     for (const [currency, rate] of Object.entries(rates)) {
-        console.log(`Adding rate to list: ${currency} - ${rate}`); // Debug-logg
         const listItem = document.createElement("li");
         listItem.textContent = `${currency}: ${rate.toFixed(2)}`;
         list.appendChild(listItem);
     }
 
-    container.innerHTML = ""; // Rensa eventuell tidigare data
+    container.innerHTML = "";
     container.appendChild(list);
-
-    console.log("Exchange rates displayed successfully."); // Debug-logg
 }
 
-// Anropa funktionen när sidan laddas
+// Lägg till händelsehanterare för formuläret (POST)
+document.getElementById("currencyForm").addEventListener("submit", async function (event) {
+    event.preventDefault(); // Förhindra standardformulärsinlämning
+
+    const formData = {
+        baseCurrency: document.getElementById("baseCurrency").value,
+        targetCurrency: document.getElementById("targetCurrency").value,
+        amount: document.getElementById("amount").value
+    };
+
+    try {
+        const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(formData) // Skicka formdata som JSON
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("Data from POST request:", data);
+
+        // Visa konverteringens resultat
+        document.getElementById("result").innerText = `${formData.amount} ${formData.baseCurrency} = ${data.convertedAmount.toFixed(2)} ${formData.targetCurrency}`;
+    } catch (error) {
+        console.error("Error:", error);
+    }
+});
+
+// Hämta valutakurser när sidan laddas
 window.onload = () => {
-    console.log("Page loaded. Fetching exchange rates..."); // Debug-logg
+    console.log("Page loaded. Fetching exchange rates...");
     fetchExchangeRates();
 };

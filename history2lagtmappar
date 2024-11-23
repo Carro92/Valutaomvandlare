@@ -1,19 +1,71 @@
-host json
-{
-  "version": "2.0",
-  "logging": {
-    "applicationInsights": {
-      "samplingSettings": {
-        "isEnabled": true,
-        "excludedTypes": "Request"
-      },
-      "enableLiveMetricsFilters": true
+script
+
+// URL till API:et
+const apiUrl = "http://127.0.0.1:7071/api/FetchExchangeRates"; // För localhost backend
+
+
+
+// Funktion för att hämta växelkurser
+async function fetchExchangeRates() {
+    console.log("Start fetching exchange rates..."); // Debug-logg
+
+    try {
+        console.log("Sending request to API:", apiUrl); // Debug-logg
+        const response = await fetch(apiUrl, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
+            },
+        });
+
+        console.log("Response received:", response); // Debug-logg
+
+        if (!response.ok) {
+            console.error("API response is not OK. Status:", response.status); // Debug-logg
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("Data fetched successfully:", data); // Debug-logg
+        displayExchangeRates(data.rates); // Skicka 'rates' till display-funktionen
+    } catch (error) {
+        console.error("Error fetching exchange rates:", error); // Debug-logg
     }
-  }
+
+    console.log("Finished fetching exchange rates."); // Debug-logg
 }
 
-"
-using System;
+// Funktion för att visa växelkurser i HTML
+function displayExchangeRates(rates) {
+    console.log("Displaying exchange rates:", rates); // Debug-logg
+
+    const container = document.getElementById("exchangeRatesContainer");
+    const list = document.createElement("ul");
+
+    for (const [currency, rate] of Object.entries(rates)) {
+        console.log(`Adding rate to list: ${currency} - ${rate}`); // Debug-logg
+        const listItem = document.createElement("li");
+        listItem.textContent = `${currency}: ${rate.toFixed(2)}`;
+        list.appendChild(listItem);
+    }
+
+    container.innerHTML = ""; // Rensa eventuell tidigare data
+    container.appendChild(list);
+
+    console.log("Exchange rates displayed successfully."); // Debug-logg
+}
+
+// Anropa funktionen när sidan laddas
+window.onload = () => {
+    console.log("Page loaded. Fetching exchange rates..."); // Debug-logg
+    fetchExchangeRates();
+};
+
+
+
+fetchExchangeRates
+
+"using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -41,9 +93,12 @@ public static class FetchExchangeRates
         if (req.Method == HttpMethod.Options)
         {
             var optionsResponse = new HttpResponseMessage(HttpStatusCode.OK);
-            optionsResponse.Headers.Add("Access-Control-Allow-Origin", corsOrigins);
-            optionsResponse.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS");
-            optionsResponse.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
+            
+            // Tillåter flera origin-domäner
+            optionsResponse.Headers.Add("Access-Control-Allow-Origin", corsOrigins); // Tillåter angivna domäner
+            optionsResponse.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS"); // Tillåt metoder
+            optionsResponse.Headers.Add("Access-Control-Allow-Headers", "Content-Type"); // Tillåt headers
+
             return optionsResponse;
         }
 
@@ -78,91 +133,59 @@ public static class FetchExchangeRates
             Content = new StringContent(result.ToString(), System.Text.Encoding.UTF8, "application/json")
         };
 
+        // Lägg till CORS-headers för att tillåta förfrågningar från angivna origin-domäner
         responseMessage.Headers.Add("Access-Control-Allow-Origin", corsOrigins);
-        responseMessage.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS");
+        responseMessage.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS"); 
         responseMessage.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
 
         return responseMessage;
     }
 }
-"
-"
-
-## min fetch
-
-using System;
-using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
-
-public static class FetchExchangeRates
-{
-    private static readonly HttpClient client = new HttpClient();
-
-    [FunctionName("FetchExchangeRates")]
-    public static async Task<HttpResponseMessage> Run(
-        [HttpTrigger(AuthorizationLevel.Function, "get", Route = null)] HttpRequestMessage req,
-        ILogger log)
-    {
-        log.LogInformation("Fetching exchange rates...");
-
-        // Hämta CORS-konfiguration från miljövariabel
-        string corsOrigins = Environment.GetEnvironmentVariable("CORS_ALLOWED_ORIGINS");
-        log.LogInformation("CORS allowed origins: " + corsOrigins); // Debug-logg för CORS
-
-        string apiKey = Environment.GetEnvironmentVariable("OPENEXCHANGERATES_API_KEY");
-        string url = $"https://openexchangerates.org/api/latest.json?app_id={apiKey}";  // Korrekt stränginterpolation
-
-        var response = await client.GetStringAsync(url);
-        var data = JObject.Parse(response);
-
-        // Filtrera valutorna
-        var popularCurrencies = new[] { "EUR", "GBP", "SEK", "USD", "AUD", "JPY", "CAD", "CHF", "NOK", "THB" };
-        var filteredRates = new JObject();
-        foreach (var currency in popularCurrencies)
-        {
-            if (data["rates"][currency] != null)
-            {
-                filteredRates[currency] = data["rates"][currency];
-            }
-        }
-
-        var result = new JObject
-        {
-            ["base"] = data["base"],
-            ["rates"] = filteredRates
-        };
-
-        // Returnera svaret med CORS-header
-        var responseMessage = new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = new StringContent(result.ToString(), System.Text.Encoding.UTF8, "application/json")
-        };
-
-        // Lägg till CORS-header för att tillåta förfrågningar från dina angivna origin-domäner
-        responseMessage.Headers.Add("Access-Control-Allow-Origin", corsOrigins); // Lägg till CORS-header här
-        responseMessage.Headers.Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS"); // Tillåt GET, POST, och OPTIONS
-        responseMessage.Headers.Add("Access-Control-Allow-Headers", "Content-Type"); // Tillåt Content-Type-header
-
-        return responseMessage;
-    }
-}
 
 "
 
-## local.setting
+index filen 
 
-{
-  "IsEncrypted": false,
-  "Values": {
-    "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=valutaomvandlarestorage;AccountKey=oc7XZpFbS0asVDtxWg30C6MwPvL2Nao1k87oWZOd0E4JTMYwUR8zoGLN7xrqDXpX7Ib2snfBybyH+ASt2F+nvQ==;EndpointSuffix=core.windows.net",
-    "TableStorageConnectionString": "DefaultEndpointsProtocol=https;AccountName=valutaomvandlarestorage;AccountKey=oc7XZpFbS0asVDtxWg30C6MwPvL2Nao1k87oWZOd0E4JTMYwUR8zoGLN7xrqDXpX7Ib2snfBybyH+ASt2F+nvQ==;EndpointSuffix=core.windows.net",
-    "FUNCTIONS_WORKER_RUNTIME": "dotnet",
-    "OPENEXCHANGERATES_API_KEY": "c6a67d02f1df4caba929b95769d56950",
-    "CORS_ALLOWED_ORIGINS": "http://127.0.0.1:8081,http://localhost:8081"
-  }
-}
+"
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valutaomvandlare</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Välkommen till Valutaomvandlaren!</h1>
+    <p>Denna app hjälper dig att omvandla valutor med aktuella växelkurser.</p>
+
+    <!-- Plats för att visa aktuella växelkurser -->
+    <div id="exchangeRatesContainer">
+        <h2>Aktuella växelkurser:</h2>
+        <!-- Växelkurserna kommer att visas här -->
+    </div>
+
+    <!-- Formulär för valutaomvandling -->
+    <form id="currencyForm">
+        <label for="baseCurrency">Basvaluta:</label>
+        <input type="text" id="baseCurrency" placeholder="Ex: USD" required>
+        
+        <label for="targetCurrency">Målvaluta:</label>
+        <input type="text" id="targetCurrency" placeholder="Ex: SEK" required>
+        
+        <label for="amount">Belopp:</label>
+        <input type="number" id="amount" placeholder="Ex: 100" required>
+        
+        <button type="submit">Konvertera</button>
+    </form>
+
+    <!-- Plats för att visa resultat -->
+    <div id="result"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
+
+
+"
