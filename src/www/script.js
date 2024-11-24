@@ -1,13 +1,14 @@
-const apiUrl = "https://valutaomvandlare-functionapp.azurewebsites.net/api/fetchexchangerates"; // Använd Azure Function URL här
+const apiUrl = "https://valutaomvandlare-functionapp.azurewebsites.net/api/fetchexchangerates";
 
 // Funktion för att hämta växelkurser (GET)
 async function fetchExchangeRates() {
     console.log("Start fetching exchange rates...");
     try {
         const response = await fetch(apiUrl, {
-            method: "GET", // Gör GET-förfrågan för att hämta valutakurser
+            method: "GET",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "x-functions-key": "2RL2SoFlskqGdNAUtz0wfAapPBH5po6l-qgO5qlgDtwhAzFuAHATWw=="
             }
         });
 
@@ -18,7 +19,7 @@ async function fetchExchangeRates() {
 
         const data = await response.json();
         console.log("Data fetched successfully:", data);
-        displayExchangeRates(data.rates); // Visa de hämtade valutorna
+        displayExchangeRates(data.rates);
     } catch (error) {
         console.error("Error fetching exchange rates:", error);
     }
@@ -41,7 +42,7 @@ function displayExchangeRates(rates) {
 
 // Lägg till händelsehanterare för formuläret (POST)
 document.getElementById("currencyForm").addEventListener("submit", async function (event) {
-    event.preventDefault(); // Förhindra standardformulärsinlämning
+    event.preventDefault();
 
     const formData = {
         baseCurrency: document.getElementById("baseCurrency").value,
@@ -53,9 +54,10 @@ document.getElementById("currencyForm").addEventListener("submit", async functio
         const response = await fetch(apiUrl, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "x-functions-key": "2RL2SoFlskqGdNAUtz0wfAapPBH5po6l-qgO5qlgDtwhAzFuAHATWw=="
             },
-            body: JSON.stringify(formData) // Skicka formdata som JSON
+            body: JSON.stringify(formData)
         });
 
         if (!response.ok) {
@@ -65,7 +67,6 @@ document.getElementById("currencyForm").addEventListener("submit", async functio
         const data = await response.json();
         console.log("Data from POST request:", data);
 
-        // Visa konverteringens resultat
         document.getElementById("result").innerText = `${formData.amount} ${formData.baseCurrency} = ${data.convertedAmount.toFixed(2)} ${formData.targetCurrency}`;
     } catch (error) {
         console.error("Error:", error);
