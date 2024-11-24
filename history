@@ -7,7 +7,7 @@
 
 hämta din url från ditt github repo https://github.com/Carro92/Valutaomvandlare.git
 - git remote add origin https://github.com/Carro92/Valutaomvandlare.git
-- git add .
+- git add ..
 
 
 ## Skapa en mapp som du döper till "Valutaomvandlare" lägg två filer 
