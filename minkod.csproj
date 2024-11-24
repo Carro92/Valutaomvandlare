@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <!-- Azure Table Storage SDK -->
-    <PackageReference Include="Azure.Data.Tables" Version="12.8.0" />
+    <PackageReference Include="Azure.Data.Tables" Version="12.9.1" />
     
     <!-- JSON-hantering -->
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />

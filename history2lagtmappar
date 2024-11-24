@@ -80,65 +80,96 @@ public static class FetchExchangeRates
 
     [FunctionName("FetchExchangeRates")]
     public static async Task<HttpResponseMessage> Run(
-        [HttpTrigger(AuthorizationLevel.Function, "get", "options", Route = null)] HttpRequestMessage req,
+        [HttpTrigger(AuthorizationLevel.Function, "get", "post", "options", Route = null)] HttpRequestMessage req,
         ILogger log)
     {
-        log.LogInformation("Fetching exchange rates...");
+        log.LogInformation("Handling request...");
 
         // Hämta CORS-konfiguration från miljövariabel
         string corsOrigins = Environment.GetEnvironmentVariable("CORS_ALLOWED_ORIGINS");
-        log.LogInformation("CORS allowed origins: " + corsOrigins);
 
         // Hantera OPTIONS-förfrågningar
         if (req.Method == HttpMethod.Options)
         {
             var optionsResponse = new HttpResponseMessage(HttpStatusCode.OK);
-            
-            // Tillåter flera origin-domäner
-            optionsResponse.Headers.Add("Access-Control-Allow-Origin", corsOrigins); // Tillåter angivna domäner
-            optionsResponse.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS"); // Tillåt metoder
-            optionsResponse.Headers.Add("Access-Control-Allow-Headers", "Content-Type"); // Tillåt headers
-
+            optionsResponse.Headers.Add("Access-Control-Allow-Origin", corsOrigins);
+            optionsResponse.Headers.Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+            optionsResponse.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
             return optionsResponse;
         }
 
-        // Hämta data från API
-        string apiKey = Environment.GetEnvironmentVariable("OPENEXCHANGERATES_API_KEY");
-        string url = $"https://openexchangerates.org/api/latest.json?app_id={apiKey}";
-
-        var response = await client.GetStringAsync(url);
-        var data = JObject.Parse(response);
-
-        // Filtrera valutorna
-        var popularCurrencies = new[] { "EUR", "GBP", "SEK", "USD", "AUD", "JPY", "CAD", "CHF", "NOK", "THB" };
-        var filteredRates = new JObject();
-
-        foreach (var currency in popularCurrencies)
+        // Hantera GET-förfrågningar
+        if (req.Method == HttpMethod.Get)
         {
-            if (data["rates"][currency] != null)
+            string apiKey = Environment.GetEnvironmentVariable("OPENEXCHANGERATES_API_KEY");
+            string url = $"https://openexchangerates.org/api/latest.json?app_id={apiKey}";
+
+            var response = await client.GetStringAsync(url);
+            var data = JObject.Parse(response);
+
+            var popularCurrencies = new[] { "EUR", "GBP", "SEK", "USD", "AUD", "JPY", "CAD", "CHF", "NOK", "THB" };
+            var filteredRates = new JObject();
+
+            foreach (var currency in popularCurrencies)
             {
-                filteredRates[currency] = data["rates"][currency];
+                if (data["rates"][currency] != null)
+                {
+                    filteredRates[currency] = data["rates"][currency];
+                }
             }
+
+            var result = new JObject
+            {
+                ["base"] = data["base"],
+                ["rates"] = filteredRates
+            };
+
+            var responseMessage = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(result.ToString(), System.Text.Encoding.UTF8, "application/json")
+            };
+
+            responseMessage.Headers.Add("Access-Control-Allow-Origin", corsOrigins);
+            return responseMessage;
         }
 
-        var result = new JObject
+        // Hantera POST-förfrågningar
+        if (req.Method == HttpMethod.Post)
         {
-            ["base"] = data["base"],
-            ["rates"] = filteredRates
-        };
+            var requestData = await req.Content.ReadAsStringAsync();
+            var data = JObject.Parse(requestData);
 
-        // Returnera data med CORS-header
-        var responseMessage = new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = new StringContent(result.ToString(), System.Text.Encoding.UTF8, "application/json")
-        };
+            double amount = double.Parse(data["amount"].ToString());
+            string baseCurrency = data["baseCurrency"].ToString();
+            string targetCurrency = data["targetCurrency"].ToString();
 
-        // Lägg till CORS-headers för att tillåta förfrågningar från angivna origin-domäner
-        responseMessage.Headers.Add("Access-Control-Allow-Origin", corsOrigins);
-        responseMessage.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS"); 
-        responseMessage.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
+            string apiKey = Environment.GetEnvironmentVariable("OPENEXCHANGERATES_API_KEY");
+            string url = $"https://openexchangerates.org/api/latest.json?app_id={apiKey}";
 
-        return responseMessage;
+            var response = await client.GetStringAsync(url);
+            var exchangeData = JObject.Parse(response);
+
+            double baseRate = double.Parse(exchangeData["rates"][baseCurrency].ToString());
+            double targetRate = double.Parse(exchangeData["rates"][targetCurrency].ToString());
+            double convertedAmount = (amount / baseRate) * targetRate;
+
+            var result = new JObject
+            {
+                ["baseCurrency"] = baseCurrency,
+                ["targetCurrency"] = targetCurrency,
+                ["convertedAmount"] = convertedAmount
+            };
+
+            var responseMessage = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(result.ToString(), System.Text.Encoding.UTF8, "application/json")
+            };
+
+            responseMessage.Headers.Add("Access-Control-Allow-Origin", corsOrigins);
+            return responseMessage;
+        }
+
+        return new HttpResponseMessage(HttpStatusCode.MethodNotAllowed);
     }
 }
 
@@ -189,3 +220,102 @@ index filen
 
 
 "
+
+storeexchangeRates
+
+using Azure;
+using Azure.Data.Tables;
+using System;
+using System.Threading.Tasks;
+using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+
+public static class StoreExchangeRates
+{
+    [FunctionName("StoreExchangeRates")]
+    public static async Task<IActionResult> Run(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
+        ILogger log)
+    {
+        log.LogInformation("StoreExchangeRates function triggered.");
+
+        // Hämta JSON från förfrågan
+        string requestBody = await req.ReadAsStringAsync();
+        if (string.IsNullOrEmpty(requestBody))
+        {
+            log.LogError("Request body is empty.");
+            return new BadRequestObjectResult("Request body cannot be empty.");
+        }
+
+        dynamic exchangeRates;
+        try
+        {
+            exchangeRates = JsonConvert.DeserializeObject<dynamic>(requestBody);
+        }
+        catch (Exception ex)
+        {
+            log.LogError($"Error deserializing JSON: {ex.Message}");
+            return new BadRequestObjectResult("Invalid JSON format.");
+        }
+
+        if (exchangeRates == null || exchangeRates.rates == null)
+        {
+            log.LogError("Missing 'rates' in request body.");
+            return new BadRequestObjectResult("'rates' data is missing in the request body.");
+        }
+
+        string connectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
+        if (string.IsNullOrEmpty(connectionString))
+        {
+            log.LogError("AzureWebJobsStorage is not set.");
+            return new StatusCodeResult(500);
+        }
+
+        var tableClient = new TableClient(connectionString, "ExchangeRates");
+        await tableClient.CreateIfNotExistsAsync();
+
+        foreach (var rate in exchangeRates.rates)
+        {
+            if (rate.Name == null || rate.Value == null)
+            {
+                log.LogError("Missing 'Name' or 'Value' in rate.");
+                continue;
+            }
+
+            var entity = new ExchangeRateEntity
+            {
+                PartitionKey = exchangeRates["base"].ToString(),
+                RowKey = rate.Name.ToString(),
+                Rate = rate.Value.ToString()
+            };
+
+            try
+            {
+                await tableClient.UpsertEntityAsync(entity);
+                log.LogInformation($"Saved rate for {rate.Name}: {rate.Value}");
+            }
+            catch (Exception ex)
+            {
+                log.LogError($"Error saving rate for {rate.Name}: {ex.Message}");
+            }
+        }
+
+        return new OkResult();
+    }
+}
+
+public class ExchangeRateEntity : ITableEntity
+{
+    public string PartitionKey { get; set; }
+    public string RowKey { get; set; }
+    public DateTimeOffset? Timestamp { get; set; }
+    public string Rate { get; set; }
+
+    // Korrekt typ för ETag enligt ITableEntity
+    public ETag ETag { get; set; } = ETag.All;
+}
+

@@ -131,3 +131,9 @@ C:\Users\The_C\Desktop\minkod\obj\Debug\net6.0\minkod.csproj.CopyComplete
 C:\Users\The_C\Desktop\minkod\obj\Debug\net6.0\minkod.dll
 C:\Users\The_C\Desktop\minkod\obj\Debug\net6.0\ref\minkod.dll
 C:\Users\The_C\Desktop\minkod\obj\Debug\net6.0\minkod.pdb
+C:\Users\The_C\Desktop\minkod\bin\Debug\net6.0\System.ClientModel.dll
+C:\Users\The_C\Desktop\minkod\bin\Debug\net6.0\System.Diagnostics.DiagnosticSource.dll
+C:\Users\The_C\Desktop\minkod\bin\Debug\net6.0\System.Text.Json.dll
+C:\Users\The_C\Desktop\minkod\bin\output\System.ClientModel.dll
+C:\Users\The_C\Desktop\minkod\bin\output\System.Diagnostics.DiagnosticSource.dll
+C:\Users\The_C\Desktop\minkod\bin\output\System.Text.Json.dll

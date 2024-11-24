@@ -1,19 +1,18 @@
-using Azure;
 using Azure.Data.Tables;
-using System;
-using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.WebJobs.Extensions.Http;
+using System;
 
 public static class StoreExchangeRates
 {
     [FunctionName("StoreExchangeRates")]
     public static async Task<IActionResult> Run(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req,
         ILogger log)
     {
         log.LogInformation("StoreExchangeRates function triggered.");
@@ -43,13 +42,8 @@ public static class StoreExchangeRates
             return new BadRequestObjectResult("'rates' data is missing in the request body.");
         }
 
+        // Spara växelkurser i ExchangeRates tabellen
         string connectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
-        if (string.IsNullOrEmpty(connectionString))
-        {
-            log.LogError("AzureWebJobsStorage is not set.");
-            return new StatusCodeResult(500);
-        }
-
         var tableClient = new TableClient(connectionString, "ExchangeRates");
         await tableClient.CreateIfNotExistsAsync();
 
@@ -65,7 +59,8 @@ public static class StoreExchangeRates
             {
                 PartitionKey = exchangeRates["base"].ToString(),
                 RowKey = rate.Name.ToString(),
-                Rate = rate.Value.ToString()
+                Rate = rate.Value.ToString(),
+                ConvertedAmount = rate.Value.ToString()  // Assuming you're storing the rate as a placeholder for converted amount
             };
 
             try
@@ -82,15 +77,3 @@ public static class StoreExchangeRates
         return new OkResult();
     }
 }
-
-public class ExchangeRateEntity : ITableEntity
-{
-    public string PartitionKey { get; set; }
-    public string RowKey { get; set; }
-    public DateTimeOffset? Timestamp { get; set; }
-    public string Rate { get; set; }
-
-    // Korrekt typ för ETag enligt ITableEntity
-    public ETag ETag { get; set; } = ETag.All;
-}
-
