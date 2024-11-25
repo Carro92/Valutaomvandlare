@@ -1,5 +1,5 @@
 {
-  "$schema": "https://schema.management.azure.com/schemas/2019-10-01/functionapp.json",
+  "$schema": "https://json.schemastore.org/azure-functions.json",
   "bindings": [
       {
           "authLevel": "anonymous",
