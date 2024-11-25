@@ -20,7 +20,7 @@ async function fetchExchangeRates() {
         const data = await response.json();
         console.log("Data fetched successfully:", data);
         displayExchangeRates(data.rates);
-    } catch (error) {
+    } catch (error) {   
         console.error("Error fetching exchange rates:", error);
     }
 }

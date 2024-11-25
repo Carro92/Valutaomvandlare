@@ -1,17 +1,17 @@
 {
-    "bindings": [
+  "$schema": "https://schema.management.azure.com/schemas/2019-10-01/functionapp.json",
+  "bindings": [
       {
-        "authLevel": "anonymous",
-        "type": "httpTrigger",
-        "direction": "in",
-        "name": "req",
-        "methods": ["get", "post"]
+          "authLevel": "anonymous",
+          "type": "httpTrigger",
+          "direction": "in",
+          "name": "req",
+          "methods": [ "GET", "POST", "OPTIONS" ]
       },
       {
-        "type": "http",
-        "direction": "out",
-        "name": "$return"
+          "type": "http",
+          "direction": "out",
+          "name": "$return"
       }
-    ]
-  }
-  
+  ]
+}
