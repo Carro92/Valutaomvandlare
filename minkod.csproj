@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <AzureFunctionsVersion>v4</AzureFunctionsVersion>
@@ -14,6 +13,9 @@
     
     <!-- Azure Functions SDK -->
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="4.5.0" />
+    
+    <!-- Azure HTTP Extensions -->
+    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.Http" Version="3.2.0" />
   </ItemGroup>
 
   <ItemGroup>

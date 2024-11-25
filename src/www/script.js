@@ -1,5 +1,5 @@
-const apiUrl = "https://valutaomvandlare-functionapp.azurewebsites.net/api/fetchexchangerates";
-
+const apiUrl = "https://valutaomvandlare-functionapp.azurewebsites.net/api/FetchExchangeRates";
+    
 // Funktion för att hämta växelkurser (GET)
 async function fetchExchangeRates() {
     console.log("Start fetching exchange rates...");
