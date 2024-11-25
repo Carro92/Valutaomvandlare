@@ -1,10 +1,11 @@
 {
-    "routes": [
-      {
-        "route": "/api/*",
-        "rewrite": "https://valutaomvandlare-functionapp.azurewebsites.net/api/:splat",
-        "allowedRoles": ["anonymous"]
-      }
-    ]
-  }
-  
+  "routes": [
+    {
+      "route": "/api/*",
+      "rewrite": "http://valutaomvandlare-functionapp.azurewebsites.net/api/:splat",
+      "allowedRoles": [
+        "anonymous"
+      ]
+    }
+  ]
+}
