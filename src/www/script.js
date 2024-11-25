@@ -1,14 +1,24 @@
-const apiUrl = "/api/FetchExchangeRates";
-    
+// Kontrollera var appen körs (lokalt eller i Azure)
+const isLocal = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost";
+
+// Sätt API URL baserat på miljö
+const baseApiUrl = isLocal
+    ? "http://localhost:7071/api" // Lokal URL
+    : "https://valutaomvandlare-functionapp.azurewebsites.net/api"; // Azure URL
+
+const fetchExchangeRatesUrl = `${baseApiUrl}/FetchExchangeRates`; // URL för att hämta växelkurser
+const storeConversionHistoryUrl = `${baseApiUrl}/StoreConversionHistory`; // URL för att lagra konverteringshistorik
+
+console.log(`Base API URL is set to: ${baseApiUrl}`);
+
 // Funktion för att hämta växelkurser (GET)
 async function fetchExchangeRates() {
     console.log("Start fetching exchange rates...");
     try {
-        const response = await fetch(apiUrl, {
+        const response = await fetch(fetchExchangeRatesUrl, {
             method: "GET",
             headers: {
-                "Content-Type": "application/json",
-                "x-functions-key": "2RL2SoFlskqGdNAUtz0wfAapPBH5po6l-qgO5qlgDtwhAzFuAHATWw=="
+                "Content-Type": "application/json"
             }
         });
 
@@ -20,7 +30,7 @@ async function fetchExchangeRates() {
         const data = await response.json();
         console.log("Data fetched successfully:", data);
         displayExchangeRates(data.rates);
-    } catch (error) {   
+    } catch (error) {
         console.error("Error fetching exchange rates:", error);
     }
 }
@@ -51,16 +61,16 @@ document.getElementById("currencyForm").addEventListener("submit", async functio
     };
 
     try {
-        const response = await fetch(apiUrl, {
+        const response = await fetch(storeConversionHistoryUrl, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
-                "x-functions-key": "2RL2SoFlskqGdNAUtz0wfAapPBH5po6l-qgO5qlgDtwhAzFuAHATWw=="
+                "Content-Type": "application/json"
             },
             body: JSON.stringify(formData)
         });
 
         if (!response.ok) {
+            console.error("API response is not OK. Status:", response.status);
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
 
