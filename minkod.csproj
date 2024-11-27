@@ -7,6 +7,8 @@
   <ItemGroup>
     <!-- Azure Table Storage SDK -->
     <PackageReference Include="Azure.Data.Tables" Version="12.9.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.8" />
     
     <!-- JSON-hantering -->
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />

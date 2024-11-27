@@ -1,128 +1,57 @@
 using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
 
 public static class FetchExchangeRates
 {
-    private static readonly HttpClient client = new HttpClient();
+    private static readonly HttpClient HttpClient = new HttpClient();
 
     [FunctionName("FetchExchangeRates")]
-    public static async Task<HttpResponseMessage> Run(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", "options", Route = null)] HttpRequestMessage req,
+    public static async Task<IActionResult> Run(
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = null)] HttpRequest req,
         ILogger log)
     {
-        log.LogInformation("Handling request...");
+        log.LogInformation("Fetching exchange rates...");
 
-        // Hantera OPTIONS-förfrågningar för CORS
-        if (req.Method == HttpMethod.Options)
+        string apiKey = Environment.GetEnvironmentVariable("OPENEXCHANGERATES_API_KEY");
+        if (string.IsNullOrEmpty(apiKey))
         {
-            log.LogInformation("Handling OPTIONS request...");
-            var optionsResponse = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
-            optionsResponse.Headers.Add("Access-Control-Allow-Origin", "*");
-            optionsResponse.Headers.Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-            optionsResponse.Headers.Add("Access-Control-Allow-Headers", "Content-Type, x-functions-key");
-            return optionsResponse;
+            return new BadRequestObjectResult("API key is not configured.");
         }
 
-        // Hantera GET-förfrågningar
-        if (req.Method == HttpMethod.Get)
+        string apiUrl = $"https://openexchangerates.org/api/latest.json?app_id={apiKey}";
+
+        try
         {
-            log.LogInformation("Handling GET request...");
-            string apiKey = Environment.GetEnvironmentVariable("OPENEXCHANGERATES_API_KEY");
-            log.LogInformation($"Using API Key: {apiKey}");
+            var response = await HttpClient.GetAsync(apiUrl);
+            response.EnsureSuccessStatusCode();
 
-            string url = $"https://openexchangerates.org/api/latest.json?app_id={apiKey}";
+            var responseBody = await response.Content.ReadAsStringAsync();
+            var data = JObject.Parse(responseBody);
 
-            var response = await client.GetStringAsync(url);
-            var data = JObject.Parse(response);
-
+            // Lista över de populära valutorna som ska visas
             var popularCurrencies = new[] { "EUR", "GBP", "SEK", "USD", "AUD", "JPY", "CAD", "CHF", "NOK", "THB" };
-            var filteredRates = new JObject();
 
-            foreach (var currency in popularCurrencies)
-            {
-                if (data["rates"][currency] != null)
-                {
-                    filteredRates[currency] = data["rates"][currency];
-                }
-            }
+            // Filtrera ut de specifika valutorna
+            var rates = data["rates"]
+                .ToObject<Dictionary<string, decimal>>()
+                .Where(rate => popularCurrencies.Contains(rate.Key)) // Filtrera endast de populära valutorna
+                .ToDictionary(rate => rate.Key, rate => rate.Value);
 
-            var result = new JObject
-            {
-                ["base"] = data["base"],
-                ["rates"] = filteredRates
-            };
-
-            var responseMessage = new HttpResponseMessage(System.Net.HttpStatusCode.OK)
-            {
-                Content = new StringContent(result.ToString(), System.Text.Encoding.UTF8, "application/json")
-            };
-
-            responseMessage.Headers.Add("Access-Control-Allow-Origin", "*");
-            return responseMessage;
+            return new OkObjectResult(new { rates });
         }
-
-        // Hantera POST-förfrågningar
-        if (req.Method == HttpMethod.Post)
+        catch (Exception ex)
         {
-            log.LogInformation("Handling POST request...");
-            string requestBody = await req.Content.ReadAsStringAsync();
-            log.LogInformation($"Request Body: {requestBody}");
-
-            dynamic data = JObject.Parse(requestBody);
-            string baseCurrency = data?.baseCurrency;
-            string targetCurrency = data?.targetCurrency;
-            decimal amount = data?.amount;
-
-            if (string.IsNullOrEmpty(baseCurrency) || string.IsNullOrEmpty(targetCurrency) || amount <= 0)
-            {
-                log.LogError("Invalid input data.");
-                return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest)
-                {
-                    Content = new StringContent("Invalid input data.")
-                };
-            }
-
-            // Här kan du lägga till logik för valutakonvertering
-            var rates = new Dictionary<string, decimal>
-            {
-                {"USD", 1m}, {"EUR", 0.95m}, {"SEK", 10.5m}, {"GBP", 0.8m}, {"THB", 34.5m}
-            };
-
-            if (!rates.ContainsKey(baseCurrency) || !rates.ContainsKey(targetCurrency))
-            {
-                log.LogError("Unsupported currency.");
-                return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest)
-                {
-                    Content = new StringContent("Unsupported currency.")
-                };
-            }
-
-            decimal baseRate = rates[baseCurrency];
-            decimal targetRate = rates[targetCurrency];
-            decimal convertedAmount = amount * (targetRate / baseRate);
-
-            var responseMessage = new HttpResponseMessage(System.Net.HttpStatusCode.OK)
-            {
-                Content = new StringContent(new JObject
-                {
-                    ["baseCurrency"] = baseCurrency,
-                    ["targetCurrency"] = targetCurrency,
-                    ["amount"] = amount,
-                    ["convertedAmount"] = convertedAmount
-                }.ToString(), System.Text.Encoding.UTF8, "application/json")
-            };
-
-            responseMessage.Headers.Add("Access-Control-Allow-Origin", "*");
-            return responseMessage;
+            log.LogError($"Error fetching exchange rates: {ex.Message}");
+            return new StatusCodeResult(StatusCodes.Status500InternalServerError);
         }
-
-        return new HttpResponseMessage(System.Net.HttpStatusCode.MethodNotAllowed);
     }
 }

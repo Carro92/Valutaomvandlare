@@ -936,5 +936,5 @@ public static class StoreExchangeRates
 
 "
 
-## För att deplyoa till azure  skriv i terminalen på vs code
+## För att deplyoa till azure  skriv i terminalen på vs code av det man har gjort:
 func azure functionapp publish valutaomvandlare-functionapp
