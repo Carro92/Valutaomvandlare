@@ -29,6 +29,7 @@ async function fetchExchangeRates() {
         displayExchangeRates(data.rates);
     } catch (error) {
         console.error("Error fetching exchange rates:", error);
+        alert("Kunde inte hämta växelkurser. Kontrollera anslutningen.");
     }
 }
 
@@ -51,9 +52,14 @@ function displayExchangeRates(rates) {
 document.getElementById("currencyForm").addEventListener("submit", async function (event) {
     event.preventDefault();
 
-    const baseCurrency = document.getElementById("baseCurrency").value;
-    const targetCurrency = document.getElementById("targetCurrency").value;
+    const baseCurrency = document.getElementById("baseCurrency").value.toUpperCase();
+    const targetCurrency = document.getElementById("targetCurrency").value.toUpperCase();
     const amount = parseFloat(document.getElementById("amount").value);
+
+    if (isNaN(amount) || !baseCurrency || !targetCurrency) {
+        alert("Vänligen fyll i alla fält korrekt.");
+        return;
+    }
 
     try {
         const response = await fetch(`${baseApiUrl}ConvertCurrency`, {
@@ -80,6 +86,7 @@ document.getElementById("currencyForm").addEventListener("submit", async functio
         resultElement.innerText = `${amount} ${baseCurrency} = ${data.convertedAmount.toFixed(2)} ${targetCurrency}`;
     } catch (error) {
         console.error("Error:", error);
+        alert("Ett fel inträffade vid valutaomvandlingen. Kontrollera anslutningen eller försöka igen senare.");
     }
 });
 
