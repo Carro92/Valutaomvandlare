@@ -21,6 +21,7 @@ public static class FetchExchangeRates
     {
         log.LogInformation("Fetching exchange rates...");
 
+        // Hämta API-nyckel från miljövariabel
         string apiKey = Environment.GetEnvironmentVariable("OPENEXCHANGERATES_API_KEY");
         if (string.IsNullOrEmpty(apiKey))
         {
@@ -37,13 +38,13 @@ public static class FetchExchangeRates
             var responseBody = await response.Content.ReadAsStringAsync();
             var data = JObject.Parse(responseBody);
 
-            // Lista över de populära valutorna som ska visas
+            // Specifika populära valutor
             var popularCurrencies = new[] { "EUR", "GBP", "SEK", "USD", "AUD", "JPY", "CAD", "CHF", "NOK", "THB" };
 
-            // Filtrera ut de specifika valutorna
+            // Filtrera och hämta växelkurser för de specifika valutorna
             var rates = data["rates"]
                 .ToObject<Dictionary<string, decimal>>()
-                .Where(rate => popularCurrencies.Contains(rate.Key)) // Filtrera endast de populära valutorna
+                .Where(rate => popularCurrencies.Contains(rate.Key))
                 .ToDictionary(rate => rate.Key, rate => rate.Value);
 
             return new OkObjectResult(new { rates });
