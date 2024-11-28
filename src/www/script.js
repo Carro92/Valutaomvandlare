@@ -1,25 +1,21 @@
-// API-basadress och endpoints
-const apiUrl = "https://valutaomvandlare-functionapp.azurewebsites.net/api";
-const fetchExchangeRatesEndpoint = "/FetchExchangeRates";
-const convertCurrencyEndpoint = "/ConvertCurrency";
+// Bas-URL för API:t
+const baseUrl = "http://localhost:7071/api/";
+const apiKey = localStorage.getItem("FUNCTION_APP_KEY") || "REPLACE_WITH_YOUR_KEY";
 
-// Hämtar API-nyckeln från en miljövariabel som sätts av backend-konfigurationen
-const functionAppKey = process.env.FUNCTION_APP_KEY || "REPLACE_WITH_DEFAULT_IF_NEEDED";
-
+// Funktion för att hämta aktuella växelkurser
 async function fetchExchangeRates() {
     try {
-        console.log("Fetching exchange rates...");
-        const response = await fetch(`${apiUrl}${fetchExchangeRatesEndpoint}`, {
+        const response = await fetch(`${baseUrl}FetchExchangeRates`, {
             method: "GET",
             headers: {
-                "x-functions-key": functionAppKey
+                "Content-Type": "application/json",
+                "x-functions-key": apiKey,
             },
         });
         if (!response.ok) {
-            throw new Error(`Error fetching exchange rates: ${response.statusText}`);
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        console.log("Exchange rates fetched successfully:", data);
         displayExchangeRates(data.rates);
     } catch (error) {
         console.error("Error fetching exchange rates:", error);
@@ -27,58 +23,65 @@ async function fetchExchangeRates() {
     }
 }
 
-async function convertCurrency(baseCurrency, targetCurrency, amount) {
-    try {
-        console.log(`Converting ${amount} ${baseCurrency} to ${targetCurrency}...`);
-        const response = await fetch(`${apiUrl}${convertCurrencyEndpoint}`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "x-functions-key": functionAppKey
-            },
-            body: JSON.stringify({
-                baseCurrency: baseCurrency,
-                targetCurrency: targetCurrency,
-                amount: parseFloat(amount),
-            }),
-        });
-        if (!response.ok) {
-            throw new Error(`Error converting currency: ${response.statusText}`);
-        }
-        const data = await response.json();
-        console.log("Currency converted successfully:", data);
-        displayConversionResult(data);
-    } catch (error) {
-        console.error("Error converting currency:", error);
-        alert("Kunde inte konvertera valuta. Kontrollera anslutningen.");
-    }
-}
-
+// Funktion för att visa växelkurser i "exchangeRatesContainer"
 function displayExchangeRates(rates) {
-    const ratesContainer = document.getElementById("exchangeRates");
-    ratesContainer.innerHTML = ""; // Rensa tidigare resultat
+    const container = document.getElementById("exchangeRatesContainer");
+    container.innerHTML = "<h2>Aktuella växelkurser:</h2>"; // Återställ innehållet
     for (const [currency, rate] of Object.entries(rates)) {
         const rateElement = document.createElement("p");
         rateElement.textContent = `${currency}: ${rate}`;
-        ratesContainer.appendChild(rateElement);
+        container.appendChild(rateElement);
     }
 }
 
-function displayConversionResult(result) {
-    const conversionResult = document.getElementById("conversionResult");
-    conversionResult.textContent = `${result.originalAmount} ${result.baseCurrency} motsvarar ${result.convertedAmount} ${result.targetCurrency}`;
-}
+// Funktion för att omvandla valuta
+async function convertCurrency(event) {
+    event.preventDefault(); // Förhindra formulärets standardbeteende
 
-// Hantera hämta växelkurser-knappen
-document.getElementById("fetchRatesBtn").addEventListener("click", () => {
-    fetchExchangeRates();
-});
-
-// Hantera konverteringsformuläret
-document.getElementById("convertForm").addEventListener("submit", (event) => {
-    event.preventDefault();
     const baseCurrency = document.getElementById("baseCurrency").value.toUpperCase();
     const targetCurrency = document.getElementById("targetCurrency").value.toUpperCase();
-    const amount = document.getElementById("amount").value;
-    convertCurrency(baseCurrency, targetCurrency, amount);
-});
+    const amount = parseFloat(document.getElementById("amount").value);
+
+    if (!baseCurrency || !targetCurrency || isNaN(amount)) {
+        alert("Fyll i alla fält korrekt.");
+        return;
+    }
+
+    try {
+        const response = await fetch(`${baseUrl}ConvertCurrency`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "x-functions-key": apiKey,
+            },
+            body: JSON.stringify({
+                baseCurrency,
+                targetCurrency,
+                amount,
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        displayConversionResult(data);
+    } catch (error) {
+        console.error("Error converting currency:", error);
+        alert("Kunde inte konvertera valutan. Kontrollera anslutningen.");
+    }
+}
+
+// Funktion för att visa omvandlingsresultat i "result"
+function displayConversionResult(data) {
+    const resultContainer = document.getElementById("result");
+    resultContainer.innerHTML = `
+        <h3>Omvandlingsresultat:</h3>
+        <p>${data.originalAmount} ${data.baseCurrency} motsvarar ${data.convertedAmount} ${data.targetCurrency}.</p>
+    `;
+}
+
+// Event Listeners
+document.addEventListener("DOMContentLoaded", fetchExchangeRates);
+document.getElementById("currencyForm").addEventListener("submit", convertCurrency);
