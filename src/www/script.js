@@ -1,16 +1,12 @@
-// Kontrollera om appen körs lokalt eller i Azure
-const apiUrl = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
-    ? "http://localhost:7071/api"
-    : "https://valutaomvandlare-functionapp.azurewebsites.net/api";
+// Kontrollera om vi kör lokalt eller på Azure
+const isLocal = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost";
+const apiUrl = isLocal ? "http://localhost:7071/api" : "https://valutaomvandlare-functionapp.azurewebsites.net/api"; // Din Azure-URL
 
 // Funktion för att hämta växelkurser
 async function fetchExchangeRates() {
     try {
         const response = await fetch(`${apiUrl}/FetchExchangeRates`, {
             method: "GET",
-            headers: {
-                "x-functions-key": localStorage.getItem("FUNCTION_APP_KEY"), // Hämtar nyckeln från localStorage
-            },
         });
 
         if (!response.ok) {
@@ -43,7 +39,6 @@ async function convertCurrency(baseCurrency, targetCurrency, amount) {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "x-functions-key": localStorage.getItem("FUNCTION_APP_KEY"),
             },
             body: JSON.stringify({
                 baseCurrency,
