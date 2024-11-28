@@ -7,7 +7,7 @@ async function fetchExchangeRates() {
         const response = await fetch(`${apiUrl}/FetchExchangeRates`, {
             method: "GET",
             headers: {
-                "x-functions-key": localStorage.getItem("FUNCTION_APP_KEY"), // Hämtar nyckeln från localStorage
+                "x-functions-key": "din-funktion-nyckel-här", // Ersätt detta med din backend-nyckel
             },
         });
 
@@ -19,6 +19,7 @@ async function fetchExchangeRates() {
         displayExchangeRates(data.rates);
     } catch (error) {
         console.error("Error fetching exchange rates:", error);
+        alert("Kunde inte hämta växelkurser. Kontrollera anslutningen eller API-konfigurationen.");
     }
 }
 
@@ -29,7 +30,7 @@ function displayExchangeRates(rates) {
 
     for (const [currency, rate] of Object.entries(rates)) {
         const rateElement = document.createElement("p");
-        rateElement.textContent = `${currency}: ${rate}`;
+        rateElement.textContent = `${currency}: ${rate.toFixed(2)}`;
         container.appendChild(rateElement);
     }
 }
@@ -41,7 +42,7 @@ async function convertCurrency(baseCurrency, targetCurrency, amount) {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "x-functions-key": localStorage.getItem("FUNCTION_APP_KEY"),
+                "x-functions-key": "din-funktion-nyckel-här", // Ersätt detta med din backend-nyckel
             },
             body: JSON.stringify({
                 baseCurrency,
@@ -58,6 +59,7 @@ async function convertCurrency(baseCurrency, targetCurrency, amount) {
         displayConversionResult(result);
     } catch (error) {
         console.error("Error converting currency:", error);
+        alert("Kunde inte konvertera valuta. Kontrollera att du har angett rätt data och att API:t är tillgängligt.");
     }
 }
 
@@ -66,7 +68,7 @@ function displayConversionResult(result) {
     const resultContainer = document.getElementById("result");
     resultContainer.innerHTML = `
         <h3>Omvandlingsresultat:</h3>
-        <p>${result.originalAmount} ${result.baseCurrency} är ${result.convertedAmount} ${result.targetCurrency}.</p>
+        <p>${result.originalAmount.toFixed(2)} ${result.baseCurrency} är ${result.convertedAmount.toFixed(2)} ${result.targetCurrency}.</p>
     `;
 }
 
@@ -76,6 +78,11 @@ document.getElementById("currencyForm").addEventListener("submit", (event) => {
     const baseCurrency = document.getElementById("baseCurrency").value.toUpperCase();
     const targetCurrency = document.getElementById("targetCurrency").value.toUpperCase();
     const amount = parseFloat(document.getElementById("amount").value);
+
+    if (isNaN(amount) || amount <= 0) {
+        alert("Ange ett giltigt belopp.");
+        return;
+    }
 
     convertCurrency(baseCurrency, targetCurrency, amount);
 });
